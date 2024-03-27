@@ -88,7 +88,7 @@ export class Ob3gvView extends ItemView {
       nodeResolution={8}
       // nodeAutoColorBy="group"  //TODO: colorize nodes
       linkColor={() => "#f5f5f5"}
-      linkCurvature={0.8}
+      linkCurvature={0.0}
       linkCurveRotation={4}
       linkDirectionalArrowColor={"#ffffff"}
       linkDirectionalArrowLength={4}

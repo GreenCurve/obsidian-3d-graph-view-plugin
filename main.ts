@@ -8,7 +8,7 @@ export default class Ob3dgvPlugin extends Plugin {
 			(leaf) => new Ob3gvView(leaf)
 		);
 	
-		this.addRibbonIcon("dice-glyph", "Open 3D Graph View", () => {
+		this.addRibbonIcon("workflow", "Open 3D", () => {
 			this.activateView();
 		}); 
 	}
