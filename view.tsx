@@ -23,6 +23,7 @@ export class Ob3gvView extends ItemView {
   async onOpen() {
     const { useRef, useCallback, useState, useEffect } = React;
     const FocusGraph = () => {
+
       const graphJson = Dgraph7c94cd()
       const [refresh, setData] = useState(Dgraph7c94cd());
 
@@ -40,58 +41,104 @@ export class Ob3gvView extends ItemView {
 
       const [width, height] = useWindowSize();
       const fgRef = useRef();
-      const handleClick = useCallback(node => {
+
+      // const handleClick = useCallback(async node => {
+      //   // move markdown file when click
+      //   const nodePath = node.path
+      //   const dgNodefile: TFile = app.vault.getAbstractFileByPath(nodePath)
+      //   const file = app.vault.getFileByPath(dgNodefile.path)
+
+      //   if (file) {
+      //     const newPath = file.path.replace("Workspace", "Подольск");
+      //     await this.app.fileManager.renameFile(file, newPath);
+      //     new Notice(`File moved to ${newPath}`);
+      //     console.log(file.path)
+      //   } else {
+      //     new Notice('No active file found');
+      //   }
+
+      // }, [fgRef]);
+
+    const handleClick = useCallback(node => {
         // Open markdown file when click
         const nodePath = node.path
         const dgNodefile: TFile = app.vault.getAbstractFileByPath(nodePath)
         app.workspace.getLeaf().openFile(dgNodefile);
+
+
         // Auto-focus center node
         // credit to vasturiano/react-force-graph/example/camera-auto-orbit
-        const distance = 200;
-        const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-        fgRef.current.cameraPosition(
-          { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
-          node, // lookAt ({ x, y, z })
-          1500  // ms transition duration
-        );
+        // const distance = 200;
+        // const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+        // fgRef.current.cameraPosition(
+        //   { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+        //   node, // lookAt ({ x, y, z })
+        //   1500  // ms transition duration
+        // );
       }, [fgRef]);
 
-    useEffect(() => {
+    // useEffect(() => {
 
-      this.registerEvent(this.app.workspace.on('file-open',() => {
-        const currentFileName = app.workspace.getActiveFile()?.basename
-        let currentNode
-        for (let q = 0; q < graphJson.nodes.length; q++) {
-          let node = graphJson.nodes[q]
-          let nodeid = node.id
-          if (nodeid == currentFileName) {
-            currentNode = node
-          }
-        }
-        const distance = 200;
-        const distRatio = 1 + distance / Math.hypot(currentNode.x, currentNode.y, currentNode.z);
-        fgRef.current.cameraPosition(
-          { x: currentNode.x * distRatio, y: currentNode.y * distRatio, z: currentNode.z * distRatio },
-          currentNode, 
-          1500
+    //   this.registerEvent(this.app.workspace.on('file-open',() => {
+    //     const currentFileName = app.workspace.getActiveFile()?.basename
+    //     let currentNode
+    //     for (let q = 0; q < graphJson.nodes.length; q++) {
+    //       let node = graphJson.nodes[q]
+    //       let nodeid = node.id
+    //       if (nodeid == currentFileName) {
+    //         currentNode = node
+    //       }
+    //     }
+    //     const distance = 200;
+    //     const distRatio = 1 + distance / Math.hypot(currentNode.x, currentNode.y, currentNode.z);
+    //     fgRef.current.cameraPosition(
+    //       { x: currentNode.x * distRatio, y: currentNode.y * distRatio, z: currentNode.z * distRatio },
+    //       currentNode, 
+    //       1500
+    //     );
+    // }));
+    // }, []);
+
+
+    useEffect(() => {
+      if (fgRef.current ) {
+
+      // Accessing the underlying d3Force simulation
+        const graph = fgRef.current;
+
+        graph.d3Force('link').distance(link =>
+          link.curvature ? 10 : 50
         );
-    }));
+        graph.d3Force('link').strength(link =>
+          link.curvature ? 3 : 1.3
+        );
+        graph.d3Force('charge').strength(link =>
+          link.curvature ? 10 : -500
+        );
+      }
     }, []);
 
+
     return <ForceGraph3D
+      dagMode = {'bu'}  // Direct Acyclic Graph (DAG) mode
+      dagLevelDistance = {70}
       width={width}
       height={height}
       ref={fgRef}
       graphData={graphJson}
       nodeLabel="id"
-      nodeColor={() => '#b6bfc1db'}
+      nodeColor={node => node.color ? node.color : '#b6bfc1db'}
       nodeResolution={8}
-      // nodeAutoColorBy="group"  //TODO: colorize nodes
-      linkColor={() => "#f5f5f5"}
-      linkCurvature={0.0}
+      linkColor={link => link.color ? link.color : "#f5f5f5"}
+      linkWidth = {link => link.color ? 1 : 0}
+      linkCurvature={link => link.curvature ? 0.5 : 0}
       linkCurveRotation={4}
       linkDirectionalArrowColor={"#ffffff"}
-      linkDirectionalArrowLength={4}
+      linkDirectionalArrowLength={0}
+
+      linkDirectionalParticles = {2}
+      linkDirectionalParticleWidth = {0.8}
+      linkDirectionalParticleSpeed= {0.006}
 
       backgroundColor={'#202020'}
       nodeThreeObjectExtend={true}
