@@ -122,6 +122,23 @@ export class Ob3gvView extends ItemView {
     return <ForceGraph3D
       dagMode = {'bu'}  // Direct Acyclic Graph (DAG) mode
       dagLevelDistance = {70}
+
+      onDagError={(loopNodeIds) => {
+        if (typeof graphData === 'undefined' || !graphData.nodes) {
+          console.warn("Graph data is unavailable or improperly loaded.");
+          return; // Exit the function to prevent further errors
+        }
+
+        // Proceed with placing cycle nodes on the same level
+        const cycleLevel = 100;
+        loopNodeIds.forEach(nodeId => {
+          const node = graphData.nodes.find(n => n.id === nodeId);
+          if (node) {
+            node.fz = cycleLevel;
+          }
+        });
+      }}
+
       width={width}
       height={height}
       ref={fgRef}
