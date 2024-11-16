@@ -71,14 +71,26 @@ export function Dgraph7c94cd() {
   if (("frontmatter" in caches)) {
     //first possible link check,those are links in properties (Class)
 
+
+
+    //following function returns random hex color (#RRGGBB) that is not 'bad' (no pale, dark, etc colors)
     function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-      for (var i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-      }
-    return color;
+        let r, g, b;
+
+        do {
+            r = Math.floor(Math.random() * 256); // Red (0-255)
+            g = Math.floor(Math.random() * 256); // Green (0-255)
+            b = Math.floor(Math.random() * 256); // Blue (0-255)
+
+            // Brightness = r + g + b (simple heuristic for brightness)
+            var brightness = r + g + b;
+        } while (brightness < 200 || brightness > 700 || Math.abs(r - g) < 30 && Math.abs(g - b) < 30);
+
+        // Convert RGB values to Hex
+        const toHex = (value) => value.toString(16).padStart(2, '0');
+        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     }
+
 
     const frontmatter = caches.frontmatter
 

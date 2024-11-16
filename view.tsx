@@ -126,6 +126,7 @@ export class Ob3gvView extends ItemView {
       onDagError={(loopNodeIds) => {
         if (typeof graphData === 'undefined' || !graphData.nodes) {
           console.warn("Graph data is unavailable or improperly loaded.");
+          //It is not loading stuff, checked
           return; // Exit the function to prevent further errors
         }
 
