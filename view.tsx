@@ -21,6 +21,7 @@ export class Ob3gvView extends ItemView {
   }
 
   async onOpen() {
+    console.log('Initializing graph...');
     const { useRef, useCallback, useState, useEffect } = React;
     const FocusGraph = () => {
 
@@ -113,7 +114,7 @@ export class Ob3gvView extends ItemView {
           link.curvature ? 3 : 1.3
         );
         graph.d3Force('charge').strength(link =>
-          link.curvature ? 10 : -500
+          link.curvature ? 10 : -1000
         );
       }
     }, []);
@@ -180,6 +181,8 @@ export class Ob3gvView extends ItemView {
   }
 
   async onClose() {
+  console.log('Disposing graph...');
+
   ReactDOM.unmountComponentAtNode(this.containerEl);
 } 
 }

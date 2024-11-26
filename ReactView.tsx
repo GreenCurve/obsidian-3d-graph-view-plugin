@@ -109,6 +109,10 @@ export function Dgraph7c94cd() {
 
       for (let element of frontmatter.Class) {
         c_links = element.slice(2, -2)
+        c_links = c_links.split('|')[0]
+        // console.log('c_links')
+        // console.log(c_links)
+
         //slicing of square brackets of the [[foo]], as it is stored that way in the Class
         if (map.has(c_links)) {
                 if (!(c_links in Color_Based_On_Class)) {
@@ -132,7 +136,8 @@ export function Dgraph7c94cd() {
       if (!!link) {
         for (let j = 0; j < link.length; j++) {
           const links = link[j].link;
-          //console.log(links)
+          // console.log('links')
+          // console.log(links)
           if (map.has(links)) {
 
 
