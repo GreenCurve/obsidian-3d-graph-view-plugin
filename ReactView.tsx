@@ -25,9 +25,43 @@ export function Dgraph7c94cd() {
 
   
   const files = []; 
-  for (let i = 0; i < t_files.length; i++) {  
-    const Pyt = t_files[i].path
-    if (Pyt.includes("Workspace")) {
+  for (let i = 0; i < t_files.length; i++) {
+
+
+    //search with tags
+    console.log(t_files[i].path)
+    const t_c = this.app.metadataCache.getCache(t_files[i].path)
+    //getting the cache dictionary of the file:
+    //
+    //
+    // console.log('passed cash')
+    const tags = t_c.frontmatter.tags
+    const searchString = "Fundamentals_of_Data_Analysis";
+
+    let containsString
+    if (tags !== null) {
+      containsString = tags.some(item => item.toLowerCase().includes(searchString.toLowerCase()));
+      // console.log('passed tags')
+    }
+
+    // const searchString2 = "algebra";
+
+    // let containsString2 
+    // if (tags !== null) {
+    //   containsString2 = tags.some(item => item.toLowerCase().includes(searchString2.toLowerCase()));
+    //   // console.log('passed tags')
+    // }
+
+    // search with paths
+    // const Pyt = t_files[i].path
+    // const search_path = "Workspace"
+    // const containsPath = Pyt.includes(search_path)
+
+    ////  well, and this is search itself
+
+    sortcondition = containsString //|| containsString2
+
+    if (sortcondition) {
       files.push(t_files[i])
     }
   }
@@ -65,6 +99,7 @@ export function Dgraph7c94cd() {
   //getting the cache dictionary of the file:
   //
   //
+
 
   //(returns cache metadata https://docs.obsidian.md/Reference/TypeScript+API/CachedMetadata)  
 
@@ -109,7 +144,7 @@ export function Dgraph7c94cd() {
 
       for (let element of frontmatter.Class) {
         c_links = element.slice(2, -2)
-        c_links = c_links.split('|')[0]
+        c_links = c_links.split('|')[0] //links are displayed with "|", alias after it, so getting the real name
         // console.log('c_links')
         // console.log(c_links)
 
@@ -190,3 +225,4 @@ export function Dgraph7c94cd() {
   // console.log(graph)
     return graph
 }
+
