@@ -59,6 +59,7 @@
     "d3-time": "^3.0.0",
     "d3-time-format": "^4.1.0",
     "d3-timer": "^3.0.1",
+    "dat.gui": "^0.7.9",
     "data-joint": "^1.2.5",
     "debounce": "^1.2.1",
     "debug": "^4.3.4",

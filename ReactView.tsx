@@ -25,18 +25,23 @@ export function Dgraph7c94cd() {
 
   
   const files = []; 
+  //iteration in alphabetic order
   for (let i = 0; i < t_files.length; i++) {
 
+    console.log(t_files[i])
 
-    //search with tags
-    console.log(t_files[i].path)
+    //skip calendar notes
+    if (t_files[i].path.startsWith("Calendar")) {
+        console.log('Skip items that start with "Calendar"')
+        continue; }
+
     const t_c = this.app.metadataCache.getCache(t_files[i].path)
     //getting the cache dictionary of the file:
     //
     //
     // console.log('passed cash')
     const tags = t_c.frontmatter.tags
-    const searchString = "Fundamentals_of_Data_Analysis";
+    const searchString = "Math/CombiStat";
 
     let containsString
     if (tags !== null) {
@@ -91,7 +96,7 @@ export function Dgraph7c94cd() {
   const path = files[i].path
   //
 
-  graph.nodes.push({"id": heading_of_the_note,"path": path, "color": false})
+  graph.nodes.push({"id": heading_of_the_note,"path": path, "color": false,"parents": 0})
   //pushing fresh node to the nodes of the graph
   //no color finding performed yet, sot it is false for now
 
@@ -99,19 +104,13 @@ export function Dgraph7c94cd() {
   //getting the cache dictionary of the file:
   //
   //
-
-
   //(returns cache metadata https://docs.obsidian.md/Reference/TypeScript+API/CachedMetadata)  
 
   if (("frontmatter" in caches)) {
     //first possible link check,those are links in properties (Class)
-
-
-
     //following function returns random hex color (#RRGGBB) that is not 'bad' (no pale, dark, etc colors)
     function getRandomColor() {
         let r, g, b;
-
         do {
             r = Math.floor(Math.random() * 256); // Red (0-255)
             g = Math.floor(Math.random() * 256); // Green (0-255)
@@ -120,43 +119,33 @@ export function Dgraph7c94cd() {
             // Brightness = r + g + b (simple heuristic for brightness)
             var brightness = r + g + b;
         } while (brightness < 200 || brightness > 700 || Math.abs(r - g) < 30 && Math.abs(g - b) < 30);
-
         // Convert RGB values to Hex
         const toHex = (value) => value.toString(16).padStart(2, '0');
         return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     }
-
-
     const frontmatter = caches.frontmatter
-
-  
     if (!!frontmatter.Class){
-
       // console.log(frontmatter.Class)
       // console.log(typeof frontmatter.Class)
       if (typeof frontmatter.Class === 'string') {
           variable = [variable];
       }
       // just in case i have left onld text-only Class property (new ones are lists which for some reason have type 'object')
-
-
-
-
       for (let element of frontmatter.Class) {
-        c_links = element.slice(2, -2)
-        c_links = c_links.split('|')[0] //links are displayed with "|", alias after it, so getting the real name
-        // console.log('c_links')
-        // console.log(c_links)
-
+        const c_links = element.slice(2, -2).split('|')[0] //links are displayed with "|", alias after it, so getting the real name
         //slicing of square brackets of the [[foo]], as it is stored that way in the Class
         if (map.has(c_links)) {
                 if (!(c_links in Color_Based_On_Class)) {
-                  Color_Based_On_Class[c_links] = getRandomColor()
+                  Color_Based_On_Class[c_links] = [getRandomColor(),[]]
                 }
-                graph.links.push({"source":  c_links,"target": heading_of_the_note,"value": 1, "color": Color_Based_On_Class[c_links], "curvature": false})
+                //adding node to the list of children
+                Color_Based_On_Class[c_links][1].push(heading_of_the_note)
+                const color = Color_Based_On_Class[c_links][0]
+                graph.links.push({"source":  c_links,"target": heading_of_the_note,"value": 1, "color": color, "curvature": false})
                 //WARNING: link is bottom-up for a reason, it helps with DAG
                 const lastElement = graph.nodes.slice(-1)[0]
-                lastElement.color = Color_Based_On_Class[c_links]
+                lastElement.color = color
+                lastElement.parents++
         }
       }
     }
@@ -164,23 +153,14 @@ export function Dgraph7c94cd() {
 
   if (("links" in caches)) {
     //second possible link check, those are links in the text
-
-
       const link = caches.links
-      
       if (!!link) {
         for (let j = 0; j < link.length; j++) {
           const links = link[j].link;
-          // console.log('links')
-          // console.log(links)
           if (map.has(links)) {
-
-
-
             function addDictionary(arr, newDict) {
               // Check if the reverse of the new dictionary exists in the array
               for (let dict of arr) {
-
                 if (dict.source === newDict.target && dict.target === newDict.source) {
                     dict.curvature = true;      // Update the existing dictionary
                     newDict.curvature = true;
@@ -189,40 +169,19 @@ export function Dgraph7c94cd() {
               // Add the new dictionary to the array
               arr.push(newDict);
             }
-
             let arr = graph.links
             let newDict = {"source":  links,"target": heading_of_the_note,"value": 1, "color": false, "curvature": false}
             //WARNING: link is bottom-up for a reason, it helps with DAG
-
             addDictionary(arr, newDict);
+            const lastElement = graph.nodes.slice(-1)[0]
+            lastElement.parents++
           }
         }
       }
-
-      // const embed = caches.embeds
-      // if (!!embed) {
-      //   for (let k = 0; k < embed.length; k++) {
-      //     const id = embed[k].link
-      //     if (id.indexOf("#")!=-1) {
-      //       const sharp = id.indexOf("#");
-      //       const embeds = id.substring(0,sharp);
-      //       if (map.has(embeds)) {
-      //         graph.links.push({"source": heading_of_the_note,"target": embeds,"value": 1, "color": false})
-      //       }
-
-      //     } else {
-      //       const embeds = id
-      //       if (map.has(embeds)) {
-      //         graph.links.push({"source": heading_of_the_note,"target": embeds,"value": 1, "color": false})
-      //       }
-
-      //     }
-      //   }
-      // } 
-      // I do not need this piece for now, but for future me: it fetches links to the embedded objects (like pasted pngs) from caches
   }
   }
-  // console.log(graph)
+  console.log(graph)
+
     return graph
 }
 

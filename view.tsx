@@ -189,6 +189,10 @@ import { ItemView, WorkspaceLeaf } from "obsidian";
 import ForceGraph3D from "3d-force-graph";
 import SpriteText from "three-spritetext";
 import { Dgraph7c94cd } from "ReactView";
+import { GUI } from "dat.gui";
+import { TFile } from "obsidian";
+
+
 
 export const VIEW_TYPE_3D_GRAPH = "3d-graph-view";
 
@@ -209,6 +213,9 @@ export class Graph3DView extends ItemView {
   }
 
   async onOpen() {
+
+    //CREATE GUI!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     const graphJson = Dgraph7c94cd()
     // Create the container for the 3D graph
     this.graphContainer = document.createElement("div");
@@ -218,9 +225,9 @@ export class Graph3DView extends ItemView {
 
     // Initialize 3D Force Graph
     this.graph = ForceGraph3D()(this.graphContainer)
-      .dagMode("bu") // Direct Acyclic Graph layout (bottom-up)
-      .onDagError(() => {})
-      .dagLevelDistance(70)
+      // .dagMode("bu") // Direct Acyclic Graph layout (bottom-up)
+      // .onDagError(() => {})
+      // .dagLevelDistance(70)
       .graphData(graphJson)
       .backgroundColor("#202020")
       
@@ -240,17 +247,49 @@ export class Graph3DView extends ItemView {
       // // Customize link appearance
       .linkColor((link) => link.color || "#f5f5f5")
       .linkWidth((link) => (link.color ? 1 : 0))
-      .linkCurvature((link) => (link.curvature ? 0.5 : 0))
+      // .linkCurvature((link) => (link.curvature ? 0.5 : 0))
       .linkCurveRotation(4)
       .linkDirectionalArrowColor("#ffffff")
       .linkDirectionalArrowLength(0)
       .linkDirectionalParticles(2)
       .linkDirectionalParticleWidth(0.8)
-      .linkDirectionalParticleSpeed(0.006);
+      .linkDirectionalParticleSpeed(0.006)
+
+      //custom stuff
+      .onNodeClick(node => this.handleClick(node));
 
     this.graph.d3Force("link").distance((link) => (link.curvature ? 10 : 50));
     this.graph.d3Force("link").strength((link) => (link.curvature ? 3 : 1.3));
-    this.graph.d3Force("charge").strength((link) => (link.curvature ? 10 : -1000))
+    this.graph.d3Force("charge").strength((link) => (link.curvature ? 10 : -1000));
+    this.graph.d3Force('zRepel', (alpha) => {
+      this.graph.graphData().nodes.forEach(node => {
+        if (node.parents) {
+          node.z += 1000 * alpha; // Push towards z = -100 gradually
+        }
+      });
+    });
+    
+    this.graph.onEngineTick(() => {
+      this.graph.graphData().nodes.forEach(node => {
+        if (!node.parents) {
+          node.z = 0; // Force nodes with a 'parents' property to stay on z = 0
+        }
+      });
+    });
+
+
+
+  }
+
+  handleClick(node) {
+    if (!node.path) return; // Ensure the node has a valid path
+
+    const file = this.app.vault.getAbstractFileByPath(node.path);
+    if (file && file instanceof TFile) {
+      this.app.workspace.getLeaf().openFile(file);
+    } else {
+      console.warn("File not found:", node.path);
+    }
   }
 
   async onClose() {
