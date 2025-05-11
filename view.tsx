@@ -191,6 +191,8 @@ import SpriteText from "three-spritetext";
 import { Dgraph7c94cd } from "ReactView";
 import { GUI } from "dat.gui";
 import { TFile } from "obsidian";
+import * as d3 from "d3";
+
 
 
 
@@ -225,9 +227,9 @@ export class Graph3DView extends ItemView {
 
     // Initialize 3D Force Graph
     this.graph = ForceGraph3D()(this.graphContainer)
-      // .dagMode("bu") // Direct Acyclic Graph layout (bottom-up)
-      // .onDagError(() => {})
-      // .dagLevelDistance(70)
+      .dagMode("bu") // Direct Acyclic Graph layout (bottom-up)
+      .onDagError(() => {})
+      .dagLevelDistance(70)
       .graphData(graphJson)
       .backgroundColor("#202020")
       
@@ -261,21 +263,13 @@ export class Graph3DView extends ItemView {
     this.graph.d3Force("link").distance((link) => (link.curvature ? 10 : 50));
     this.graph.d3Force("link").strength((link) => (link.curvature ? 3 : 1.3));
     this.graph.d3Force("charge").strength((link) => (link.curvature ? 10 : -1000));
-    this.graph.d3Force('zRepel', (alpha) => {
-      this.graph.graphData().nodes.forEach(node => {
-        if (node.parents) {
-          node.z += 1000 * alpha; // Push towards z = -100 gradually
-        }
-      });
-    });
-    
-    this.graph.onEngineTick(() => {
-      this.graph.graphData().nodes.forEach(node => {
-        if (!node.parents) {
-          node.z = 0; // Force nodes with a 'parents' property to stay on z = 0
-        }
-      });
-    });
+  //   const fixedNodes = this.graph.graphData().nodes.filter(node => node.depth === 0); // Filter nodes where depth = 0
+  //   fixedNodes.forEach(node => {
+  //     // Fix only the y position to 0 (keep x and z positions unchanged)
+  //     node.y = 0;  // Fix Y position at 0, but leave X and Z free
+  //   });
+  // });
+
 
 
 
