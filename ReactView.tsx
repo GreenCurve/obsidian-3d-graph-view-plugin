@@ -1,53 +1,60 @@
+//exported function that builds and returns graph
 export function Dgraph7c94cd() {
-  //exported function that builds and returns graph
-
   //following function returns random hex color (#RRGGBB) that is not 'bad' (no pale, dark, etc colors)
-  function getRandomColor() {
-      let r, g, b;
+  const getRandomColor = (function () {
+    // Generate random initial hue on first use
+    let hue = Math.random() * 360;
+    const golden_ratio = 137.508; // spacing for good color separation
+    const saturation = 90; // vibrant
+    const lightness = 60;  // bright
 
-      do {
-          r = Math.floor(Math.random() * 256); // Red (0-255)
-          g = Math.floor(Math.random() * 256); // Green (0-255)
-          b = Math.floor(Math.random() * 256); // Blue (0-255)
+    function hslToHex(h, s, l) {
+      s /= 100;
+      l /= 100;
 
-          // Brightness = r + g + b (simple heuristic for brightness)
-          var brightness = r + g + b;
-      } while (brightness < 200 || brightness > 700 || Math.abs(r - g) < 30 && Math.abs(g - b) < 30);
+      const k = n => (n + h / 30) % 12;
+      const a = s * Math.min(l, 1 - l);
+      const f = n => {
+        const color = l - a * Math.max(-1, Math.min(Math.min(k(n) - 3, 9 - k(n)), 1));
+        return Math.round(255 * color).toString(16).padStart(2, '0');
+      };
 
-      // Convert RGB values to Hex
-      const toHex = (value) => value.toString(16).padStart(2, '0');
-      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-  }
+      return `#${f(0)}${f(8)}${f(4)}`;
+    }
+
+    return function () {
+      hue = (hue + golden_ratio) % 360;
+      return hslToHex(hue, saturation, lightness);
+    };
+  })();
 
 
-  function blendHexColors(color1, color2) {
-    if (!color1) return color2;
+  function blendHexColors(colors) {
+    if (!colors.length) return "#000000"; // default to black if list is empty
 
-    const hexToRgb = hex => ({
-      r: parseInt(hex.slice(1, 3), 16),
-      g: parseInt(hex.slice(3, 5), 16),
-      b: parseInt(hex.slice(5, 7), 16),
+    let total = { r: 0, g: 0, b: 0 };
+
+    colors.forEach(hex => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+
+      total.r += r;
+      total.g += g;
+      total.b += b;
     });
 
-    const rgbToHex = ({ r, g, b }) =>
-      '#' +
-      [r, g, b]
-        .map(c => Math.round(c).toString(16).padStart(2, '0'))
-        .join('');
-
-    const rgb1 = hexToRgb(color1);
-    const rgb2 = hexToRgb(color2);
-
-    const blended = {
-      r: (rgb1.r + rgb2.r) / 2,
-      g: (rgb1.g + rgb2.g) / 2,
-      b: (rgb1.b + rgb2.b) / 2,
+    const n = colors.length;
+    const avg = {
+      r: Math.round(total.r / n),
+      g: Math.round(total.g / n),
+      b: Math.round(total.b / n),
     };
 
-    return rgbToHex(blended);
+    const toHex = c => c.toString(16).padStart(2, '0');
+
+    return `#${toHex(avg.r)}${toHex(avg.g)}${toHex(avg.b)}`;
   }
-
-
   //cuz apparently i cannot just pop
   function removeItem(array, value) {
     const index = array.indexOf(value);
@@ -56,24 +63,26 @@ export function Dgraph7c94cd() {
     }
     // else do nothing
   }
-
   //find if the name exists among the ids of node objects in some list
   function idExists(arr, searchId) {
   return arr.some(item => item.id === searchId);
   }
-
-
-
-  
+  // Check if the reverse of the link exists in the array
+  function addDictionary(arr, newDict) {
+    for (let dict of arr) {
+      if (dict.source === newDict.target && dict.target === newDict.source) {
+          dict.curvature = true;      // Update the existing dictionary
+          newDict.curvature = true;
+      }
+    }
+    arr.push(newDict);
+  } 
+  //graph that is going to be returned at the end
+  //DO NOT CHANGE ANY KEY OF THE DICTIONARIES PUSHED TO THIS VARIABLE, IT SEEMS THEY ARE IMPORTANT LATER IN view.tsx
   const graph = {
     "nodes":[],
     "links":[]
   }
-  //graph that is going to be returned at the end
-  //DO NOT CHANGE ANY KEY OF THE DICTIONARIES PUSHED TO THIS VARIABLE, IT SEEMS THEY ARE IMPORTANT LATER IN view.tsx
-
-
-  const t_files = app.vault.getMarkdownFiles()
   //fetch all the md files from the vault
   //returns an array of dictionaries (files)
   //each dictionary(file) has:
@@ -84,9 +93,8 @@ export function Dgraph7c94cd() {
   //  saving -- idk, default false
   //  deleted -- idk, default false
   //  parent, stat, vault, [[Prototype]] -- idk
-
-
-  
+  const t_files = app.vault.getMarkdownFiles()
+  console.log(t_files)
   const files = []; 
   //iteration in alphabetic order
   for (let i = 0; i < t_files.length; i++) {
@@ -104,7 +112,7 @@ export function Dgraph7c94cd() {
     //
     // console.log('passed cash')
     const tags = t_c.frontmatter.tags
-    const searchString = "Мы/flow";
+    const searchString = "Math/CombiStat";
 
     let containsString
     if (tags !== null) {
@@ -133,9 +141,8 @@ export function Dgraph7c94cd() {
       files.push(t_files[i])
     }
   }
-  // sorting only the ones who are in Workspace
-  //const files = t_files
 
+  //TODO, some kind of global map of files?
   function maping() {
     const map = new Map()
     for (let i = 0; i < files.length; i++) {
@@ -143,15 +150,9 @@ export function Dgraph7c94cd() {
     map.set(heading, "i")
     }
     return map
-  }
-  //TODO, some kind of global map of files?
-
+  }  
   const map = maping()
 
-
-  Color_Based_On_Class = {}
-  //keep track of all the "class" properties (only applicable to my vault) and map the entire class group to its color
-  //stores all the root nodes of the classes along with their respective colors
   colored_links = []
   //future use
   colored_nodes = []
@@ -172,107 +173,58 @@ export function Dgraph7c94cd() {
     //no color finding performed yet, sot it is false for now
 
     //if some other node called this to be added to the list of tree, do it now
-    if (heading_of_the_note in future_root_nodes){
+    if (future_root_nodes.includes(heading_of_the_note)){
       colored_nodes.push(current_note)
     }
     removeItem(future_root_nodes,heading_of_the_note)
 
-
-
-    const caches = this.app.metadataCache.getCache(path)
     //getting the cache dictionary of the file:
-    //
-    //
-
-
     //(returns cache metadata https://docs.obsidian.md/Reference/TypeScript+API/CachedMetadata)  
-
+    const caches = this.app.metadataCache.getCache(path)
+    //check for Class property of the note
     if (("frontmatter" in caches)) {
-      //first possible link check,those are links in properties (Class)
-
-      const frontmatter = caches.frontmatter
-
-    
+      const frontmatter = caches.frontmatter    
       if (!!frontmatter.Class){
-
-        // console.log(frontmatter.Class)
-        // console.log(typeof frontmatter.Class)
+        // just in case i have left onld text-only Class property (new ones are lists which for some reason have type 'object')
         if (typeof frontmatter.Class === 'string') {
             variable = [variable];
         }
-        // just in case i have left onld text-only Class property (new ones are lists which for some reason have type 'object')
-
-
-
         for (let element of frontmatter.Class) {
           node_name_in_the_link = element.slice(2, -2)
-          node_name_in_the_link = node_name_in_the_link.split('|')[0] //links are displayed with "|", alias after it, so getting the real name
-          // console.log('node_name_in_the_link')
-          // console.log(node_name_in_the_link)
-
+          //links are displayed with "|", alias after it, so getting the real name
+          node_name_in_the_link = node_name_in_the_link.split('|')[0] 
           //slicing of square brackets of the [[foo]], as it is stored that way in the Class
           if (map.has(node_name_in_the_link)) {
-                  //if root node has no color associated with its tree yet, assign it in dict of colors
-                  if (!(node_name_in_the_link in Color_Based_On_Class)) {
-                    Color_Based_On_Class[node_name_in_the_link] = getRandomColor()
-                  }
-
-                  current_link = {"source":  node_name_in_the_link,"target": heading_of_the_note,"value": 1, "color": node_name_in_the_link, "curvature": false}
-                  //graph.links.push(current_link)
-                  colored_links.push(current_link)
-
                   //WARNING: link is bottom-up for a reason, it helps with DAG
-                  graph.links.push({"source":  node_name_in_the_link,"target": heading_of_the_note,"value": 1, "color": Color_Based_On_Class[node_name_in_the_link], "curvature": false})
-                  //make the new node the color of the root node it connects to (act the color of the LAST root node it connects to)
-                  current_note.color = blendHexColors(current_note.color,Color_Based_On_Class[node_name_in_the_link])
-
-                  //if (current_note.color === false) {current_note.color = []}
-                  //current_note.color.append(node_name_in_the_link)
-                  //check if was already added as root node before pushing again
-                  colored_nodes.push(current_note)
-
-                  //add new future root node if not already processed
-                  if (idExists(colored_nodes,node_name_in_the_link)) {future_root_nodes.push(node_name_in_the_link)}
-
-
+                  current_link = {"source":  node_name_in_the_link,"target": heading_of_the_note,"value": 1, "color": node_name_in_the_link, "curvature": false}
+                  graph.links.push(current_link)
+                  colored_links.push(current_link)
+                  //The color of the node is now list
+                  if (current_note.color === false) {current_note.color = []}
+                  //add another depandancy into the color list
+                  current_note.color.push(node_name_in_the_link)
+                  //push to the coloreds (unless was added up there in the code as a root)
+                  if (!colored_nodes.includes(current_note)){
+                    colored_nodes.push(current_note)}
+                  //add new future root node if not already processed or added in to be processed list
+                  if (!(idExists(colored_nodes,node_name_in_the_link)) && !future_root_nodes.includes(node_name_in_the_link)) {future_root_nodes.push(node_name_in_the_link)}
           }
         }
       }
     }
-
+    //second possible link check, those are links in the main body (text)
     if (("links" in caches)) {
-      //second possible link check, those are links in the text
-
-
         const link = caches.links
-        
         if (!!link) {
           for (let j = 0; j < link.length; j++) {
             const links = link[j].link;
             // console.log('links')
             // console.log(links)
             if (map.has(links)) {
-
-
-
-              function addDictionary(arr, newDict) {
-                // Check if the reverse of the new dictionary exists in the array
-                for (let dict of arr) {
-
-                  if (dict.source === newDict.target && dict.target === newDict.source) {
-                      dict.curvature = true;      // Update the existing dictionary
-                      newDict.curvature = true;
-                  }
-                }
-                // Add the new dictionary to the array
-                arr.push(newDict);
-              }
-
-              let arr = graph.links
-              let newDict = {"source":  links,"target": heading_of_the_note,"value": 1, "color": false, "curvature": false}
+              let array = graph.links
+              let newDictionary = {"source":  links,"target": heading_of_the_note,"value": 1, "color": false, "curvature": false}
               //WARNING: link is bottom-up for a reason, it helps with DAG
-
-              addDictionary(arr, newDict);
+              addDictionary(array, newDictionary);
             }
           }
         }
@@ -300,15 +252,89 @@ export function Dgraph7c94cd() {
         // I do not need this piece for now, but for future me: it fetches links to the embedded objects (like pasted pngs) from caches
     }
   }
-  // console.log(graph)
-    console.log(Color_Based_On_Class)
-    console.log(colored_nodes)
-    console.log(colored_links)
-
-    //reassign the colors
 
 
+  //finding missing roots and inserting them to complete the list
+  for (let i = 0; i < future_root_nodes.length; i++){
+    const item_root = future_root_nodes[i];
+    for (let j = 0; j<graph.nodes.length; j++){
+      const item_node = graph.nodes[j];
+      if (item_node.id === item_root){
+        colored_nodes.push(item_node)
+      }
+    }
+  }
 
-    return graph
+
+
+  // Graph coloring
+
+  let actualy_colored_nodes = [];
+
+  while (true) {
+    if (colored_nodes.length === 0) break;
+
+    for (let i = 0; i < colored_nodes.length; ) {
+      const item = colored_nodes[i];
+
+      if (item.color === false) {
+        item.color = getRandomColor();
+
+        colored_nodes.splice(i, 1);
+        actualy_colored_nodes.push(item);
+        // No i++ here because the list got shorter
+      } else {
+        // Process item.color list
+        for (let j = 0; j < item.color.length; j++) {
+          const colorRef = item.color[j];
+
+          if (colorRef.startsWith("#")) continue; // skip already resolved
+
+          // Try to find match by id
+          const match = actualy_colored_nodes.find(n => n.id === colorRef);
+
+          if (match) {
+            // Replace with actual color
+            item.color[j] = match.color;
+          }
+          // If no match, we leave the original string as-is and skip it later
+        }
+
+        // Check if all entries now start with #
+        const unresolved = item.color.some(c => !c.startsWith("#"));
+
+        if (!unresolved) {
+          // All are resolved: blend and update
+          item.color = blendHexColors(item.color);
+
+          colored_nodes.splice(i, 1);
+          actualy_colored_nodes.push(item);
+          // Do not increment i (list shrunk)
+        } else {
+          i++; // No change to array, so move on
+        }
+      }
+    }
+  }
+
+
+  for (let i = 0; i < colored_links.length; i++) {
+    const link = colored_links[i];
+    const match = actualy_colored_nodes.find(node => node.id === link.color);
+
+    if (match) {
+      link.color = match.color;
+    }
+  }
+
+
+  // console.log(colored_nodes)
+  // console.log(actualy_colored_nodes)
+  // console.log(colored_links)
+
+
+
+
+  return graph
 }
 
