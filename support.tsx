@@ -80,3 +80,13 @@ export function addDictionary(arr, newDict) {
   }
   arr.push(newDict);
 } 
+
+export function push_forward(arr,key2,key1) {
+  const i = arr.indexOf(key1);
+  const j = arr.indexOf(key2);
+
+  if (i !== -1 && j !== -1 && i > j) {
+    arr.splice(i, 1);        // remove key1 from current position
+    arr.splice(j, 0, key1);  // insert key1 before key2
+  }
+}

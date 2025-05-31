@@ -87,7 +87,7 @@ export function Dgraph7c94cd() {
     const heading_of_the_note = files[i].basename
     const path = files[i].path
     //crerating a new node in the map if not already exist
-    if (!nodes_map.has(heading_of_the_note)){
+    if (!nodes_map.has("heading_of_the_note")){
       nodes_map.set(heading_of_the_note,{"id": heading_of_the_note,"path": path, "color": false,'incoming':new Set(),'outcoming':new Set()})
       nodes_order.push(heading_of_the_note)
     } else {
@@ -98,7 +98,7 @@ export function Dgraph7c94cd() {
     //getting the cache dictionary of the file:
     //(returns cache metadata https://docs.obsidian.md/Reference/TypeScript+API/CachedMetadata)  
     const caches = this.app.metadataCache.getCache(path)
-    // check for Class property of the note
+    //check for Class property of the note
     if (("frontmatter" in caches)) {
       const frontmatter = caches.frontmatter    
       if (!!frontmatter.Class){
@@ -116,7 +116,7 @@ export function Dgraph7c94cd() {
                   nodes_map.get(heading_of_the_note).incoming.add(node_name_in_the_link)
                   if (!nodes_map.has(node_name_in_the_link)){
                         nodes_map.set(node_name_in_the_link,{"id": node_name_in_the_link,"path": "", "color": false,'incoming':new Set(),'outcoming':new Set()})
-                        nodes_order.push(node_name_in_the_link)
+                        nodes_order.push(heading_of_the_note)
                       }
                   nodes_map.get(node_name_in_the_link).outcoming.add(heading_of_the_note)
                   //moving the new one forward as a requirment for the old one
@@ -134,8 +134,8 @@ export function Dgraph7c94cd() {
             if (map.has(links)) {
               nodes_map.get(heading_of_the_note).incoming.add(links)
               if (!nodes_map.has(links)){
-                    nodes_map.set(links,{"id": links,"path": "", "color": false,'incoming':new Set(),'outcoming':new Set()})
-                    nodes_order.push(links)
+                    nodes_map.set(links,{"id": node_name_in_the_link,"path": "", "color": false,'incoming':new Set(),'outcoming':new Set()})
+                    nodes_order.push(heading_of_the_note)
                   }
               nodes_map.get(links).outcoming.add(heading_of_the_note)
               //moving the new one forward as a requirment for the old one
@@ -146,6 +146,6 @@ export function Dgraph7c94cd() {
     }
   }
 
-  return [nodes_map,nodes_order]
+  return nodes_map,nodes_order
 }
 
