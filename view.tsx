@@ -227,15 +227,10 @@ export class Graph3DView extends ItemView {
 
     // Initialize 3D Force Graph
     this.graph = ForceGraph3D()(this.graphContainer)
-      .dagMode("bu") // Direct Acyclic Graph layout (bottom-up)
-      .onDagError(() => {})
-      .dagLevelDistance(70)
       .graphData(graphJson)
       .backgroundColor("#202020")
-      
       // Set node labels
       .nodeLabel("id")
-      
       // // Customize node appearance
       .nodeColor((node) => node.color || "#b6bfc1db")
       .nodeThreeObjectExtend(true)
@@ -245,7 +240,6 @@ export class Graph3DView extends ItemView {
         sprite.textHeight = 4;
         return sprite;
       })
-      
       // // Customize link appearance
       .linkColor((link) => link.color || "#f5f5f5")
       .linkWidth((link) => (link.color ? 1 : 0))
@@ -256,21 +250,44 @@ export class Graph3DView extends ItemView {
       .linkDirectionalParticles(2)
       .linkDirectionalParticleWidth(0.8)
       .linkDirectionalParticleSpeed(0.006)
-
-      //custom stuff
       .onNodeClick(node => this.handleClick(node));
 
-    this.graph.d3Force("link").distance((link) => (link.curvature ? 10 : 50));
-    this.graph.d3Force("link").strength((link) => (link.curvature ? 3 : 1.3));
-    this.graph.d3Force("charge").strength((link) => (link.curvature ? 10 : -1000));
-  //   const fixedNodes = this.graph.graphData().nodes.filter(node => node.depth === 0); // Filter nodes where depth = 0
-  //   fixedNodes.forEach(node => {
-  //     // Fix only the y position to 0 (keep x and z positions unchanged)
-  //     node.y = 0;  // Fix Y position at 0, but leave X and Z free
-  //   });
-  // });
 
 
+
+    //setiing node cooridatnes at random
+    const data = this.graph.graphData();
+    data.nodes.forEach((node) => {
+      node.x = Math.random() * 100;
+      node.y = Math.random() * 100;
+      node.z = Math.random() * 100;
+    });
+    this.graph.graphData(data);
+
+    // Resolve source/target references to node objects
+    const nodeById = Object.fromEntries(data.nodes.map(n => [n.id, n]));
+    data.links.forEach(link => {
+      link.source = nodeById[link.source];
+      link.target = nodeById[link.target];
+    });
+    this.graph.graphData(data);
+
+
+
+    // Then disable forces
+    this.graph.d3Force('charge', null);
+    this.graph.d3Force('link', null);
+    this.graph.d3Force('center', null);
+
+    
+  //   // Remove one random link every 1 second
+  // setInterval(() => {
+  //   const { nodes, links } = this.graph.graphData();
+  //   if (links.length === 0) return;
+  //   const index = Math.floor(Math.random() * links.length);
+  //   links.splice(index, 1);
+  //   this.graph.graphData({ nodes, links });
+  // }, 1000);
 
 
   }

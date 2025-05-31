@@ -1,82 +1,9 @@
+//import supporiting functions
+import { getRandomColor,blendHexColors,removeItem,idExists,addDictionary } from "support.tsx";
+
 //exported function that builds and returns graph
 export function Dgraph7c94cd() {
-  //following function returns random hex color (#RRGGBB) that is not 'bad' (no pale, dark, etc colors)
-  const getRandomColor = (function () {
-    // Generate random initial hue on first use
-    let hue = Math.random() * 360;
-    const golden_ratio = 137.508; // spacing for good color separation
-    const saturation = 90; // vibrant
-    const lightness = 60;  // bright
 
-    function hslToHex(h, s, l) {
-      s /= 100;
-      l /= 100;
-
-      const k = n => (n + h / 30) % 12;
-      const a = s * Math.min(l, 1 - l);
-      const f = n => {
-        const color = l - a * Math.max(-1, Math.min(Math.min(k(n) - 3, 9 - k(n)), 1));
-        return Math.round(255 * color).toString(16).padStart(2, '0');
-      };
-
-      return `#${f(0)}${f(8)}${f(4)}`;
-    }
-
-    return function () {
-      hue = (hue + golden_ratio) % 360;
-      return hslToHex(hue, saturation, lightness);
-    };
-  })();
-
-
-  function blendHexColors(colors) {
-    if (!colors.length) return "#000000"; // default to black if list is empty
-
-    let total = { r: 0, g: 0, b: 0 };
-
-    colors.forEach(hex => {
-      const r = parseInt(hex.slice(1, 3), 16);
-      const g = parseInt(hex.slice(3, 5), 16);
-      const b = parseInt(hex.slice(5, 7), 16);
-
-      total.r += r;
-      total.g += g;
-      total.b += b;
-    });
-
-    const n = colors.length;
-    const avg = {
-      r: Math.round(total.r / n),
-      g: Math.round(total.g / n),
-      b: Math.round(total.b / n),
-    };
-
-    const toHex = c => c.toString(16).padStart(2, '0');
-
-    return `#${toHex(avg.r)}${toHex(avg.g)}${toHex(avg.b)}`;
-  }
-  //cuz apparently i cannot just pop
-  function removeItem(array, value) {
-    const index = array.indexOf(value);
-    if (index !== -1) {
-      array.splice(index, 1);
-    }
-    // else do nothing
-  }
-  //find if the name exists among the ids of node objects in some list
-  function idExists(arr, searchId) {
-  return arr.some(item => item.id === searchId);
-  }
-  // Check if the reverse of the link exists in the array
-  function addDictionary(arr, newDict) {
-    for (let dict of arr) {
-      if (dict.source === newDict.target && dict.target === newDict.source) {
-          dict.curvature = true;      // Update the existing dictionary
-          newDict.curvature = true;
-      }
-    }
-    arr.push(newDict);
-  } 
   //graph that is going to be returned at the end
   //DO NOT CHANGE ANY KEY OF THE DICTIONARIES PUSHED TO THIS VARIABLE, IT SEEMS THEY ARE IMPORTANT LATER IN view.tsx
   const graph = {
@@ -93,55 +20,45 @@ export function Dgraph7c94cd() {
   //  saving -- idk, default false
   //  deleted -- idk, default false
   //  parent, stat, vault, [[Prototype]] -- idk
+
   const t_files = app.vault.getMarkdownFiles()
   console.log(t_files)
   const files = []; 
+
   //iteration in alphabetic order
   for (let i = 0; i < t_files.length; i++) {
-
-    console.log(t_files[i].path)
-
     //skip calendar notes
     if (t_files[i].path.startsWith("Calendar") || t_files[i].path.startsWith("Template")) {
         console.log('Skip items that start forbidden')
         continue; }
-
     const t_c = this.app.metadataCache.getCache(t_files[i].path)
     //getting the cache dictionary of the file:
     //
     //
     // console.log('passed cash')
     const tags = t_c.frontmatter.tags
-    const searchString = "Math/CombiStat";
-
+    const searchString = "Economics/Econometrics";
     let containsString
     if (tags !== null) {
       containsString = tags.some(item => item.toLowerCase().includes(searchString.toLowerCase()));
       // console.log('passed tags')
     }
-
-    // const searchString2 = "algebra";
-
-    // let containsString2 
-    // if (tags !== null) {
-    //   containsString2 = tags.some(item => item.toLowerCase().includes(searchString2.toLowerCase()));
-    //   // console.log('passed tags')
-    // }
-
+    const searchString2 = "Economics/Econometrics";
+    let containsString2 
+    if (tags !== null) {
+      containsString2 = tags.some(item => item.toLowerCase().includes(searchString2.toLowerCase()));
+      // console.log('passed tags')
+    }
     // search with paths
     // const Pyt = t_files[i].path
     // const search_path = "Workspace"
     // const containsPath = Pyt.includes(search_path)
-
     ////  well, and this is search itself
-
-    sortcondition = containsString //|| containsString2
-
+    sortcondition = containsString || containsString2
     if (sortcondition) {
       files.push(t_files[i])
     }
   }
-
   //TODO, some kind of global map of files?
   function maping() {
     const map = new Map()
@@ -152,6 +69,7 @@ export function Dgraph7c94cd() {
     return map
   }  
   const map = maping()
+  console.log(map)
 
   colored_links = []
   //future use
@@ -159,6 +77,10 @@ export function Dgraph7c94cd() {
   //future use
   future_root_nodes = []
   //future use
+
+
+
+
 
   for (let i = 0; i < files.length; i++) {
     //start of the giant FOR cycle that iterates over every file fetched
@@ -268,7 +190,6 @@ export function Dgraph7c94cd() {
 
 
   // Graph coloring
-
   let actualy_colored_nodes = [];
 
   while (true) {
@@ -312,6 +233,7 @@ export function Dgraph7c94cd() {
           // Do not increment i (list shrunk)
         } else {
           i++; // No change to array, so move on
+          console.log(item.color)
         }
       }
     }
