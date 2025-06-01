@@ -1,6 +1,6 @@
 import { maping,basenames_array } from "support.tsx";
 
-//exported function that builds and returns graph
+//exported function that returns raw graph data
 export function Dgraph7c94cd() {
   //fetch all the md files from the vault
   //returns an array of dictionaries (files)
@@ -14,15 +14,14 @@ export function Dgraph7c94cd() {
   //  parent, stat, vault, [[Prototype]] -- idk
   const raw_data = app.vault.getMarkdownFiles()
 
-  const files = []; 
 
   //iteration in alphabetic order
+  const filtered_files = []; 
   for (let i = 0; i < raw_data.length; i++) {
     //skip calendar notes and template notes
     if (raw_data[i].path.startsWith("Calendar") || raw_data[i].path.startsWith("Template")) {
         console.log('Skip items that start forbidden')
         continue; }
-
 
     //be default file is not included
     let Verdict = false
@@ -47,8 +46,8 @@ export function Dgraph7c94cd() {
     }
     //path conditions check
     const Pyt = raw_data[i].path
-    const search_path_conditions = ["Workspace"]
-    let containsPath = false
+    const search_path_conditions = []
+    let containsPath = true
     for (let condition_path of search_path_conditions){
       containsPath = containsPath || Pyt.includes(condition_path)
       if (!containsPath) {
@@ -58,21 +57,21 @@ export function Dgraph7c94cd() {
     //and finally, our verdict is:
     Verdict = Verdict || (containsTags && containsPath)
     if (Verdict) {
-      files.push(raw_data[i])
+      filtered_files.push(raw_data[i])
     }
   }
 
   //creating map with each node having a custom unfilled template
-  const map = maping(files)
+  const nodes_map = maping(filtered_files)
   //creating list of node basenames for the topological sort
-  nodes_top_sort = basenames_array(files)
+  nodes_top_sort = basenames_array(filtered_files)
   edges_top_sort = []
 
-  for (let i = 0; i < files.length; i++) {
+  for (let i = 0; i < filtered_files.length; i++) {
     //start of the giant FOR cycle that iterates over every file fetched
 
-    const heading_of_the_note = files[i].basename
-    const path = files[i].path
+    const heading_of_the_note = filtered_files[i].basename
+    const path = filtered_files[i].path
 
     //getting the cache dictionary of the file:
     //(returns cache metadata https://docs.obsidian.md/Reference/TypeScript+API/CachedMetadata)  
@@ -90,7 +89,7 @@ export function Dgraph7c94cd() {
           //links are displayed with "|", alias after it, so getting the real name
           node_name_in_the_link = node_name_in_the_link.split('|')[0] 
           //slicing of square brackets of the [[foo]], as it is stored that way in the Class
-          if (map.has(node_name_in_the_link)) {
+          if (nodes_map.has(node_name_in_the_link)) {
                   //adding improvised ;ink into map
                   nodes_map.get(heading_of_the_note).parents.add(node_name_in_the_link)
                   nodes_map.get(node_name_in_the_link).children.add(heading_of_the_note)
@@ -106,7 +105,7 @@ export function Dgraph7c94cd() {
         if (!!link) {
           for (let j = 0; j < link.length; j++) {
             const links = link[j].link;
-            if (map.has(links)) {
+            if (nodes_map.has(links)) {
               nodes_map.get(heading_of_the_note).incoming.add(links)
               nodes_map.get(links).outcoming.add(heading_of_the_note)
               //topological sort
