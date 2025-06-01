@@ -1,3 +1,5 @@
+import { maping,basenames_array } from "support.tsx";
+
 //exported function that builds and returns graph
 export function Dgraph7c94cd() {
   //fetch all the md files from the vault
@@ -10,68 +12,60 @@ export function Dgraph7c94cd() {
   //  saving -- idk, default false
   //  deleted -- idk, default false
   //  parent, stat, vault, [[Prototype]] -- idk
-  const t_files = app.vault.getMarkdownFiles()
+  const raw_data = app.vault.getMarkdownFiles()
 
   const files = []; 
 
   //iteration in alphabetic order
-  for (let i = 0; i < t_files.length; i++) {
-    //skip calendar notes
-    if (t_files[i].path.startsWith("Calendar") || t_files[i].path.startsWith("Template")) {
+  for (let i = 0; i < raw_data.length; i++) {
+    //skip calendar notes and template notes
+    if (raw_data[i].path.startsWith("Calendar") || raw_data[i].path.startsWith("Template")) {
         console.log('Skip items that start forbidden')
         continue; }
-    const t_c = this.app.metadataCache.getCache(t_files[i].path)
+
+
+    //be default file is not included
+    let Verdict = false
+    //but if some conditions resolve as true...
+    //to change whether you need AND or OR for the tags or paths specific, chnage the booleans for the contains-guys and boolean operation inside for loop
+    //to change how you apply conditions together, go into the Verdict in the end
+
+    //tag conditions check
     //getting the cache dictionary of the file:
-    //
-    //
-    // console.log('passed cash')
+    const t_c = this.app.metadataCache.getCache(raw_data[i].path)
     const tags = t_c.frontmatter.tags
-    const searchString = "Economics/Econometrics";
-    let containsString
-    if (tags !== null) {
-      containsString = tags.some(item => item.toLowerCase().includes(searchString.toLowerCase()));
-      // console.log('passed tags')
+    const search_conditions = ["Economics/Econometrics","Economics/Econometrics"]
+    let containsTags = false
+    if (tags !== null){
+      for (let condition of search_conditions){
+        containsTags = containsTags || tags.some(item => item.toLowerCase().includes(condition.toLowerCase()));
+        //break the moment we spot atleast one condition is not fulfilled
+        if (!containsTags) {
+          break
+        }
+      }
     }
-    const searchString2 = "Economics/Econometrics";
-    let containsString2 
-    if (tags !== null) {
-      containsString2 = tags.some(item => item.toLowerCase().includes(searchString2.toLowerCase()));
-      // console.log('passed tags')
+    //path conditions check
+    const Pyt = raw_data[i].path
+    const search_path_conditions = ["Workspace"]
+    let containsPath = false
+    for (let condition_path of search_path_conditions){
+      containsPath = containsPath || Pyt.includes(condition_path)
+      if (!containsPath) {
+          break
+      }
     }
-    // search with paths
-    // const Pyt = t_files[i].path
-    // const search_path = "Workspace"
-    // const containsPath = Pyt.includes(search_path)
-    ////  well, and this is search itself
-    sortcondition = containsString || containsString2
-    if (sortcondition) {
-      files.push(t_files[i])
+    //and finally, our verdict is:
+    Verdict = Verdict || (containsTags && containsPath)
+    if (Verdict) {
+      files.push(raw_data[i])
     }
   }
-  //TODO, some kind of global map of files?
-  function maping() {
-    const map = new Map()
-    for (let i = 0; i < files.length; i++) {
-    const heading = files[i].basename
-    map.set(heading, "i")
-    }
-    return map
-  }  
-  const map = maping()
 
-  colored_links = []
-  //future use
-  colored_nodes = []
-  //future use
-  future_root_nodes = []
-  //future use
-
-
-
-
-  nodes_map = new Map()
-  nodes_order = []
-  nodes_top_sort = []
+  //creating map with each node having a custom unfilled template
+  const map = maping(files)
+  //creating list of node basenames for the topological sort
+  nodes_top_sort = basenames_array(files)
   edges_top_sort = []
 
   for (let i = 0; i < files.length; i++) {
@@ -79,14 +73,6 @@ export function Dgraph7c94cd() {
 
     const heading_of_the_note = files[i].basename
     const path = files[i].path
-    //crerating a new node in the map if not already exist
-    if (!nodes_map.has(heading_of_the_note)){
-      nodes_map.set(heading_of_the_note,{"id": heading_of_the_note,"path": path, "color": false,"incoming":new Set(),"outcoming":new Set(),"children":new Set(),"parents": new Set(),"x": 0, "y":0, "z": 0})
-      nodes_top_sort.push(heading_of_the_note)
-    } else {
-      nodes_map.get(heading_of_the_note).path = path
-    }
-
 
     //getting the cache dictionary of the file:
     //(returns cache metadata https://docs.obsidian.md/Reference/TypeScript+API/CachedMetadata)  
@@ -107,10 +93,6 @@ export function Dgraph7c94cd() {
           if (map.has(node_name_in_the_link)) {
                   //adding improvised ;ink into map
                   nodes_map.get(heading_of_the_note).parents.add(node_name_in_the_link)
-                  if (!nodes_map.has(node_name_in_the_link)){
-                        nodes_map.set(node_name_in_the_link,{"id": node_name_in_the_link,"path": "", "color": false,'incoming':new Set(),'outcoming':new Set(),"children":new Set(),"parents": new Set(),"x": 0, "y":0, "z": 0})
-                        nodes_top_sort.push(node_name_in_the_link)
-                      }
                   nodes_map.get(node_name_in_the_link).children.add(heading_of_the_note)
                   //topological sort
                   edges_top_sort.push([node_name_in_the_link,heading_of_the_note])
@@ -126,10 +108,6 @@ export function Dgraph7c94cd() {
             const links = link[j].link;
             if (map.has(links)) {
               nodes_map.get(heading_of_the_note).incoming.add(links)
-              if (!nodes_map.has(links)){
-                    nodes_map.set(links,{"id": links,"path": "", "color": false,'incoming':new Set(),'outcoming':new Set(),"children":new Set(),"parents": new Set(),"x": 0, "y":0, "z": 0})
-                    nodes_top_sort.push(links)
-                  }
               nodes_map.get(links).outcoming.add(heading_of_the_note)
               //topological sort
               edges_top_sort.push([links,heading_of_the_note])             

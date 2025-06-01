@@ -98,7 +98,7 @@ export function RemoveDuplicateLinks(arr) {
 
 
 export function topologicalSort(nodes, edges) {
-  
+
       // Build graph_top_sort and in-degree map
       const graph_top_sort = new Map();
       const inDegree = new Map();
@@ -143,6 +143,22 @@ export function topologicalSort(nodes, edges) {
       return sorted;
     }
 
-
-
+//direct access array to check for the file existance
+export function maping(arr) {
+  const map = new Map()
+  for (let i = 0; i < arr.length; i++) {
+  const heading = arr[i].basename
+  const path = arr[i].path
+  map.set(heading,{"id": heading,"path": path, "color": false,"incoming":new Set(),"outcoming":new Set(),"children":new Set(),"parents": new Set(),"x": 0, "y":0, "z": 0})
+  }
+  return map
+}  
+//creating array with all basenames of the files in the inital array
+export function basenames_array(arr){
+  array_of_basenames = []
+  for (let i = 0; i < arr.length; i++) {
+  array_of_basenames.push(arr[i].basename)
+  }
+  return array_of_basenames
+}
 
