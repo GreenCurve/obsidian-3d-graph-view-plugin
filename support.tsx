@@ -81,12 +81,68 @@ export function addDictionary(arr, newDict) {
   arr.push(newDict);
 } 
 
-export function push_forward(arr,key2,key1) {
-  const i = arr.indexOf(key1);
-  const j = arr.indexOf(key2);
+export function RemoveDuplicateLinks(arr) {
+  //cleanup of the duplicates
+  const seen = new Set();
+  const unique = [];
 
-  if (i !== -1 && j !== -1 && i > j) {
-    arr.splice(i, 1);        // remove key1 from current position
-    arr.splice(j, 0, key1);  // insert key1 before key2
+  for (const pair of arr) {
+    const key = JSON.stringify(pair);
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(pair); // original array, not string
+    }
   }
+  return unique
 }
+
+
+export function topologicalSort(nodes, edges) {
+  
+      // Build graph_top_sort and in-degree map
+      const graph_top_sort = new Map();
+      const inDegree = new Map();
+
+      // Initialize maps
+      for (const node of nodes) {
+        graph_top_sort.set(node, []);
+        inDegree.set(node, 0);
+      }
+            // Build adjacency list and in-degree count
+      for (const [from, to] of edges) {       
+        graph_top_sort.get(from).push(to);
+        inDegree.set(to, inDegree.get(to) + 1);
+      }
+
+      // Collect nodes with no incoming edges
+      const queue = [];
+      for (const [node, degree] of inDegree) {
+        if (degree === 0) queue.push(node);
+      }
+
+      const sorted = [];
+
+      while (queue.length > 0) {
+        const current = queue.shift();
+        sorted.push(current);
+
+        for (const neighbor of graph_top_sort.get(current)) {
+          inDegree.set(neighbor, inDegree.get(neighbor) - 1);
+          if (inDegree.get(neighbor) === 0) {
+            queue.push(neighbor);
+          }
+        }
+      }
+
+      // Check for cycles
+      if (sorted.length !== nodes.length) {
+        const unprocessed = nodes.filter(n => !sorted.includes(n));
+        throw new Error("Cycle detected involving these nodes:", unprocessed);
+        }
+
+      return sorted;
+    }
+
+
+
+

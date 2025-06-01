@@ -2,6 +2,7 @@ import { ItemView, WorkspaceLeaf } from "obsidian";
 import ForceGraph3D from "3d-force-graph";
 import SpriteText from "three-spritetext";
 import { Dgraph7c94cd } from "ReactView";
+import { Graph_processing } from "graph_processer.tsx"
 import { GUI } from "dat.gui";
 import { TFile } from "obsidian";
 import * as d3 from "d3";
@@ -86,25 +87,51 @@ export class Graph3DView extends ItemView {
     this.graph.d3Force('center', null);
 
     //Slowly add nodes
-    let [nodes_map_1, nodes_order_1] = Dgraph7c94cd()
+    let [nodes_map_1, nodes_order_1] = Graph_processing()
     let distance = 0
-    setInterval(() => {
-      console.log(distance)
-      if (!(nodes_order.length === 0)){
-        console.log(nodes_order_1)
+    const interval = setInterval(() => {
+      if (!(nodes_order_1.length === 0)){
+        // console.log(nodes_order_1)
         const { nodes, links } = this.graph.graphData();
         let new_node = nodes_map_1.get(nodes_order_1.shift())
-        new_node.x = distance;
-        new_node.y = 0
-        new_node.z = 0
-        distance += 10
+        //root nodes
+        if ((new_node.parents.size === 0) && (new_node.children.size !== 0)) {
+          new_node.y = 0
+          new_node.x = (Math.random() - 0.5) * 1000
+          new_node.z = (Math.random() - 0.5) * 1000
+        //class nodes but not roots
+        } else if ((new_node.parents.size !== 0)) {
+          new_node.y = 0
+          new_node.x = 0
+          new_node.z = 0
+          //av of the coordinates
+          for (let parent of new_node.parents) {
+            new_node.y += nodes_map_1.get(parent).y
+            new_node.x += nodes_map_1.get(parent).x
+            new_node.z += nodes_map_1.get(parent).z
+          }
+          new_node.y = new_node.y/new_node.parents.size
+          new_node.x = new_node.x/new_node.parents.size
+          new_node.z = new_node.z/new_node.parents.size
+
+          new_node.y += 10
+        //any other normal node
+        } else {
+          new_node.y = distance;
+          new_node.x = 0
+          new_node.z = 0
+          distance += 10
+        }
         nodes.push(new_node)
         this.graph.graphData({ nodes, links });
-      } else {distance = 0}
-    }, 1000);
+      } else {
+        distance = 0
+        clearInterval(interval);
+        console.log('Finished Graph Building from interval',nodes_map_1)
+        return;
 
-
-
+      }
+    }, 100);
   }
 
   handleClick(node) {

@@ -1,15 +1,5 @@
-//import supporiting functions
-import { getRandomColor,blendHexColors,removeItem,idExists,addDictionary,push_forward } from "support.tsx";
-
 //exported function that builds and returns graph
 export function Dgraph7c94cd() {
-
-  //graph that is going to be returned at the end
-  //DO NOT CHANGE ANY KEY OF THE DICTIONARIES PUSHED TO THIS VARIABLE, IT SEEMS THEY ARE IMPORTANT LATER IN view.tsx
-  const graph = {
-    "nodes":[],
-    "links":[]
-  }
   //fetch all the md files from the vault
   //returns an array of dictionaries (files)
   //each dictionary(file) has:
@@ -20,9 +10,8 @@ export function Dgraph7c94cd() {
   //  saving -- idk, default false
   //  deleted -- idk, default false
   //  parent, stat, vault, [[Prototype]] -- idk
-
   const t_files = app.vault.getMarkdownFiles()
-  console.log(t_files)
+
   const files = []; 
 
   //iteration in alphabetic order
@@ -78,8 +67,12 @@ export function Dgraph7c94cd() {
   //future use
 
 
+
+
   nodes_map = new Map()
   nodes_order = []
+  nodes_top_sort = []
+  edges_top_sort = []
 
   for (let i = 0; i < files.length; i++) {
     //start of the giant FOR cycle that iterates over every file fetched
@@ -88,8 +81,8 @@ export function Dgraph7c94cd() {
     const path = files[i].path
     //crerating a new node in the map if not already exist
     if (!nodes_map.has(heading_of_the_note)){
-      nodes_map.set(heading_of_the_note,{"id": heading_of_the_note,"path": path, "color": false,'incoming':new Set(),'outcoming':new Set()})
-      nodes_order.push(heading_of_the_note)
+      nodes_map.set(heading_of_the_note,{"id": heading_of_the_note,"path": path, "color": false,"incoming":new Set(),"outcoming":new Set(),"children":new Set(),"parents": new Set(),"x": 0, "y":0, "z": 0})
+      nodes_top_sort.push(heading_of_the_note)
     } else {
       nodes_map.get(heading_of_the_note).path = path
     }
@@ -113,14 +106,14 @@ export function Dgraph7c94cd() {
           //slicing of square brackets of the [[foo]], as it is stored that way in the Class
           if (map.has(node_name_in_the_link)) {
                   //adding improvised ;ink into map
-                  nodes_map.get(heading_of_the_note).incoming.add(node_name_in_the_link)
+                  nodes_map.get(heading_of_the_note).parents.add(node_name_in_the_link)
                   if (!nodes_map.has(node_name_in_the_link)){
-                        nodes_map.set(node_name_in_the_link,{"id": node_name_in_the_link,"path": "", "color": false,'incoming':new Set(),'outcoming':new Set()})
-                        nodes_order.push(node_name_in_the_link)
+                        nodes_map.set(node_name_in_the_link,{"id": node_name_in_the_link,"path": "", "color": false,'incoming':new Set(),'outcoming':new Set(),"children":new Set(),"parents": new Set(),"x": 0, "y":0, "z": 0})
+                        nodes_top_sort.push(node_name_in_the_link)
                       }
-                  nodes_map.get(node_name_in_the_link).outcoming.add(heading_of_the_note)
-                  //moving the new one forward as a requirment for the old one
-                  push_forward(nodes_order,heading_of_the_note,node_name_in_the_link)
+                  nodes_map.get(node_name_in_the_link).children.add(heading_of_the_note)
+                  //topological sort
+                  edges_top_sort.push([node_name_in_the_link,heading_of_the_note])
           }
         }
       }
@@ -134,18 +127,17 @@ export function Dgraph7c94cd() {
             if (map.has(links)) {
               nodes_map.get(heading_of_the_note).incoming.add(links)
               if (!nodes_map.has(links)){
-                    nodes_map.set(links,{"id": links,"path": "", "color": false,'incoming':new Set(),'outcoming':new Set()})
-                    nodes_order.push(links)
+                    nodes_map.set(links,{"id": links,"path": "", "color": false,'incoming':new Set(),'outcoming':new Set(),"children":new Set(),"parents": new Set(),"x": 0, "y":0, "z": 0})
+                    nodes_top_sort.push(links)
                   }
               nodes_map.get(links).outcoming.add(heading_of_the_note)
-              //moving the new one forward as a requirment for the old one
-              push_forward(nodes_order,heading_of_the_note,links)
+              //topological sort
+              edges_top_sort.push([links,heading_of_the_note])             
             }
           }
         }
     }
   }
-
-  return [nodes_map,nodes_order]
+  return [nodes_map,nodes_top_sort,edges_top_sort]
 }
 
