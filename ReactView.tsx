@@ -1,4 +1,4 @@
-import { maping,basenames_array } from "support.tsx";
+import { basenames_array } from "support.tsx";
 
 //exported function that returns raw graph data
 export function Dgraph7c94cd() {
@@ -33,15 +33,12 @@ export function Dgraph7c94cd() {
     //getting the cache dictionary of the file:
     const t_c = this.app.metadataCache.getCache(raw_data[i].path)
     const tags = t_c.frontmatter.tags
-    const search_conditions = ["Economics/Econometrics","Economics/Econometrics"]
+    const search_conditions = ["Economics/Econometrics"]
     let containsTags = false
     if (tags !== null){
       for (let condition of search_conditions){
         containsTags = containsTags || tags.some(item => item.toLowerCase().includes(condition.toLowerCase()));
         //break the moment we spot atleast one condition is not fulfilled
-        if (!containsTags) {
-          break
-        }
       }
     }
     //path conditions check
@@ -50,9 +47,6 @@ export function Dgraph7c94cd() {
     let containsPath = true
     for (let condition_path of search_path_conditions){
       containsPath = containsPath || Pyt.includes(condition_path)
-      if (!containsPath) {
-          break
-      }
     }
     //and finally, our verdict is:
     Verdict = Verdict || (containsTags && containsPath)
@@ -62,7 +56,53 @@ export function Dgraph7c94cd() {
   }
 
   //creating map with each node having a custom unfilled template
+
+
+  class Node{
+    constructor(id,path){
+      this.id = id
+      this.path = path
+      this.color = false
+      this.incoming = new Set()
+      this.outcoming = new Set()
+      this.children = new Set()
+      this.parents = new Set()
+      this.x = 0
+      this.y = 0
+      this.z = 0
+    }
+    // Later call this to turn arbitrary attribute into a dynamic reference when included into the node chain
+    //chat gpt warned me about serialisation with JSON.stringify(node)
+    linkPropertyToExpression(propName, expressionFn) {
+      Object.defineProperty(this, propName, {
+        get: expressionFn,
+        configurable: true,
+        enumerable: true,
+      });
+    }
+    setStaticProperty(propName, value) {
+      // Remove dynamic getter if it exists
+      delete this[propName];
+      // Set static value
+      this[propName] = value;
+    }
+  }
+
+
+  //direct access array to check for the file existance
+   function maping(arr) {
+    const map = new Map()
+    for (let i = 0; i < arr.length; i++) {
+    const heading = arr[i].basename
+    const path = arr[i].path
+    map.set(heading,new Node(heading,path))
+    }
+    return map
+  } 
+
   const nodes_map = maping(filtered_files)
+
+
   //creating list of node basenames for the topological sort
   nodes_top_sort = basenames_array(filtered_files)
   edges_top_sort = []

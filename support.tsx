@@ -28,7 +28,7 @@ export const getRandomColor = (function () {
 
 
 export  function blendHexColors(colors) {
-    if (!colors.length) return "#000000"; // default to black if list is empty
+    if (!colors.length) return "#b6bfc1db"; // default color if list is empty
 
     let total = { r: 0, g: 0, b: 0 };
 
@@ -137,22 +137,13 @@ export function topologicalSort(nodes, edges) {
       // Check for cycles
       if (sorted.length !== nodes.length) {
         const unprocessed = nodes.filter(n => !sorted.includes(n));
-        throw new Error("Cycle detected involving these nodes:", unprocessed);
+        console.error("Cycle detected involving these nodes:", unprocessed);
         }
 
       return sorted;
     }
 
-//direct access array to check for the file existance
-export function maping(arr) {
-  const map = new Map()
-  for (let i = 0; i < arr.length; i++) {
-  const heading = arr[i].basename
-  const path = arr[i].path
-  map.set(heading,{"id": heading,"path": path, "color": false,"incoming":new Set(),"outcoming":new Set(),"children":new Set(),"parents": new Set(),"x": 0, "y":0, "z": 0})
-  }
-  return map
-}  
+ 
 //creating array with all basenames of the files in the inital array
 export function basenames_array(arr){
   array_of_basenames = []
