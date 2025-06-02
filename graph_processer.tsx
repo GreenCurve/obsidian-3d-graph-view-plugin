@@ -26,9 +26,12 @@ export function Graph_processing(){
 
     //representation of a class chain
 	class NodeChain {
-	  constructor(root) {
+	  constructor(root,m_parent = 0,merg_classes = []) {
 	  	this.id = root.id
 	  	this.root = root
+	  	this.superclasses = new Map()
+	  	this.subclasses = new Map()
+
 	  	// map of node objects included in the chain
 	    this.nodes = new Map(); 
 	    this.nodes.set(root.id,root)
@@ -40,12 +43,43 @@ export function Graph_processing(){
 	    this.level = 50
 	    //new property to refer to class
 	    root.class = this
-	    //setting root to have the same stuff as its class
+
+
+	   	//if we create class as subclass
+	    if (!(m_parent === 0)){
+	    	//list of colors from all superclasses
+		    let colors = []
+		    for (let parent_class of merg_classes){
+		    	parent_class.subclasses.set(this.id,this)
+		    	this.superclasses.set(parent_class.id,parent_class)
+		    	colors.push(parent_class.color)
+		    }
+
+		    //new color shoulb be blend of references to other classes
+		    this.linkPropertyToExpression("color",() => blendHexColors(colors))
+
+		    //new coordinates should also be reference of the parent
+		    this.linkPropertyToExpression("x",() => m_parent.x)
+		    this.linkPropertyToExpression("z",() => m_parent.z)
+		    this.linkPropertyToExpression("y",() => m_parent.y + m_parent.class.level)
+		}
+
+
+		//setting root to have the same stuff as its class
 	    root.linkPropertyToExpression('x',() => this.x)
 	    root.linkPropertyToExpression('y',() => this.y)
 	    root.linkPropertyToExpression('z',() => this.z)
 	    root.linkPropertyToExpression('color',() => this.color)
+
 	  }
+
+	    linkPropertyToExpression(propName, expressionFn) {
+	      Object.defineProperty(this, propName, {
+	        get: expressionFn,
+	        configurable: true,
+	        enumerable: true,
+	      });
+	    }
 
 	  addNode(node,parent) {
 	    this.nodes.set(node.id,node);
@@ -76,10 +110,30 @@ export function Graph_processing(){
         	links.push({"source": parent.id, "target": new_node.id, "color": parent.color })
         //non-root class nodes with a more then one parent (the classes can be same or many)
     	} else if ((new_node.parents.size > 1)) {
-    		console.log('Oh no',new_node)
-    		//finding the highest branch for the new node to sit on
-			 for (let parent of new_node.parents) {}
 
+    		//find parent with the bigges y
+    		let y_level = -1
+    		let main_parent
+    		let classes_to_be_merged = new Set()
+    		for (let parent of new_node.parents){
+    			parent = nodes_map.get(parent)
+    			classes_to_be_merged.add(parent.class)
+
+    			links.push({"source": parent.id, "target": new_node.id, "color": parent.color })
+    			if (parent.y > y_level){
+    				main_parent = parent
+    			}
+    		}
+    		//if set size (amount of classes) is one, proceed as if it had one parent (no class merging neeeded)
+    		console.log(classes_to_be_merged)
+    		if (classes_to_be_merged.size === 1){
+    			main_parent = nodes_map.get(new_node.parents.values().next().value)
+        		main_parent.class.addNode(new_node,main_parent)
+        	//class merging and adding sub/super classes
+    		} else {
+    			let a = new NodeChain(new_node,main_parent,classes_to_be_merged)
+				funny_objects.push(a)
+    		}
 		//any other normal node	
         } else {
           new_node.y = distance;
