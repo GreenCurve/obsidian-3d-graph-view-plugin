@@ -122,10 +122,10 @@ export function Graph_processing(){
     			links.push({"source": parent.id, "target": new_node.id, "color": parent.color })
     			if (parent.y > y_level){
     				main_parent = parent
+    				y_level = main_parent.y
     			}
     		}
     		//if set size (amount of classes) is one, proceed as if it had one parent (no class merging neeeded)
-    		console.log(classes_to_be_merged)
     		if (classes_to_be_merged.size === 1){
     			main_parent = nodes_map.get(new_node.parents.values().next().value)
         		main_parent.class.addNode(new_node,main_parent)
@@ -152,9 +152,14 @@ export function Graph_processing(){
 
     let a = 50
     for (let chain of funny_objects){
+
     	chain.x = a
     	chain.z = a
     	a+=50
+    	if (chain.id === 'Abra' || chain.id === 'Bebra' || chain.id === 'cadebra' || chain.id === 'Allax'){
+    		chain.x = (Math.random() - 0.5) * 1000
+    		chain.z = (Math.random() - 0.5) * 1000
+    	}
    	}
 	return {nodes,links}
 }
