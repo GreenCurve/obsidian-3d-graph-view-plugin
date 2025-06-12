@@ -1,4 +1,5 @@
-import { basenames_array } from "support.tsx";
+import { basenames_array } from "functions_spellbook.tsx";
+import { Node } from "classes_spellbook.tsx"
 
 //exported function that returns raw graph data
 export function Dgraph7c94cd() {
@@ -13,7 +14,6 @@ export function Dgraph7c94cd() {
   //  deleted -- idk, default false
   //  parent, stat, vault, [[Prototype]] -- idk
   const raw_data = app.vault.getMarkdownFiles()
-
 
   //iteration in alphabetic order
   const filtered_files = []; 
@@ -58,35 +58,6 @@ export function Dgraph7c94cd() {
   //creating map with each node having a custom unfilled template
 
 
-  class Node{
-    constructor(id,path){
-      this.id = id
-      this.path = path
-      this.color = false
-      this.incoming = new Set()
-      this.outcoming = new Set()
-      this.children = new Set()
-      this.parents = new Set()
-      this.x = 0
-      this.y = 0
-      this.z = 0
-    }
-    // Later call this to turn arbitrary attribute into a dynamic reference when included into the node chain
-    //chat gpt warned me about serialisation with JSON.stringify(node)
-    linkPropertyToExpression(propName, expressionFn) {
-      Object.defineProperty(this, propName, {
-        get: expressionFn,
-        configurable: true,
-        enumerable: true,
-      });
-    }
-    setStaticProperty(propName, value) {
-      // Remove dynamic getter if it exists
-      delete this[propName];
-      // Set static value
-      this[propName] = value;
-    }
-  }
 
 
   //direct access array to check for the file existance

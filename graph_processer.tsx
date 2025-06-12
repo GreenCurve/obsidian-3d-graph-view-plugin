@@ -1,4 +1,5 @@
-import { topologicalSort,RemoveDuplicateLinks,getRandomColor,blendHexColors } from "support.tsx";
+import { topologicalSort,RemoveDuplicateLinks,getRandomColor,blendHexColors } from "functions_spellbook.tsx";
+import { NodeChain } from "classes_spellbook.tsx"
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import ForceGraph3D from "3d-force-graph";
 import SpriteText from "three-spritetext";
@@ -22,76 +23,6 @@ export function Graph_processing(){
     const links = []
 
     const funny_objects = []
-
-
-    //representation of a class chain
-	class NodeChain {
-	  constructor(root,m_parent = 0,merg_classes = []) {
-	  	this.id = root.id
-	  	this.root = root
-	  	this.superclasses = new Map()
-	  	this.subclasses = new Map()
-
-	  	// map of node objects included in the chain
-	    this.nodes = new Map(); 
-	    this.nodes.set(root.id,root)
-	    this.x = (Math.random() - 0.5) * 1000
-	    this.y = 0
-	    this.z = (Math.random() - 0.5) * 1000
-	    this.color = getRandomColor()
-	   	//distance between class nodes
-	    this.level = 50
-	    //new property to refer to class
-	    root.class = this
-
-
-	   	//if we create class as subclass
-	    if (!(m_parent === 0)){
-	    	//list of colors from all superclasses
-		    let colors = []
-		    for (let parent_class of merg_classes){
-		    	parent_class.subclasses.set(this.id,this)
-		    	this.superclasses.set(parent_class.id,parent_class)
-		    	colors.push(parent_class.color)
-		    }
-
-		    //new color shoulb be blend of references to other classes
-		    this.linkPropertyToExpression("color",() => blendHexColors(colors))
-
-		    //new coordinates should also be reference of the parent
-		    this.linkPropertyToExpression("x",() => m_parent.x)
-		    this.linkPropertyToExpression("z",() => m_parent.z)
-		    this.linkPropertyToExpression("y",() => m_parent.y + m_parent.class.level)
-		}
-
-
-		//setting root to have the same stuff as its class
-	    root.linkPropertyToExpression('x',() => this.x)
-	    root.linkPropertyToExpression('y',() => this.y)
-	    root.linkPropertyToExpression('z',() => this.z)
-	    root.linkPropertyToExpression('color',() => this.color)
-
-	  }
-
-	    linkPropertyToExpression(propName, expressionFn) {
-	      Object.defineProperty(this, propName, {
-	        get: expressionFn,
-	        configurable: true,
-	        enumerable: true,
-	      });
-	    }
-
-	  addNode(node,parent) {
-	    this.nodes.set(node.id,node);
-	    //node now references coordinates of its parent
-	    node.linkPropertyToExpression('y',() => parent.y + this.level)
-	    node.linkPropertyToExpression('x',() => parent.x)
-	    node.linkPropertyToExpression('z',() => parent.z)
-	    node.linkPropertyToExpression('color',() => parent.color)
-	    node.class = this
-	  }
-	}
-
 
 
     while (true){
