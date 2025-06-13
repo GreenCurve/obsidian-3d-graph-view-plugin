@@ -1,6 +1,9 @@
 import { getRandomColor } from "functions_spellbook.tsx";
 
 
+
+
+
 //defaul object class
 export class ShapeActor{
 	constructor(){		
@@ -22,8 +25,6 @@ export class ShapeActor{
       // Set static value
       this[propName] = value;
     }
-
-
 }
 
 
@@ -35,14 +36,26 @@ export class Node extends ShapeActor{
       this.color = false
       this.incoming = new Set()
       this.outcoming = new Set()
+      this.linkPropertyToExpression("incomingg_exclusive",() => new Set([...this.incoming].filter(x => !this.parents.has(x))))
       this.children = new Set()
       this.parents = new Set()
       this.x = 0
       this.y = 0
       this.z = 0
     }
-  }
+    nodeSurroundings(nodes_map){
+    	let surrounding = []
+    	for (let parent of this.incomingg_exclusive){
+    		parent = nodes_map.get(parent)
+    		if (parent.class){
+    			surrounding.push(parent.class.id)
+    		}
+    	}
+    	surrounding =  JSON.stringify(surrounding.sort())
+   		return surrounding
+    }
 
+  }
 
 
 

@@ -1,4 +1,4 @@
-import { topologicalSort,RemoveDuplicateLinks,getRandomColor,blendHexColors } from "functions_spellbook.tsx";
+import { topologicalSort,RemoveDuplicateLinks,blendHexColors } from "functions_spellbook.tsx";
 import { NodeChain } from "classes_spellbook.tsx"
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import ForceGraph3D from "3d-force-graph";
@@ -81,16 +81,62 @@ export function Graph_processing(){
     }
     console.log('Funny stuff',funny_objects)
 
-    let a = 50
-    for (let chain of funny_objects){
 
-    	chain.x = a
-    	chain.z = a
-    	a+=50
-    	if (chain.id === 'Abra' || chain.id === 'Bebra' || chain.id === 'cadebra' || chain.id === 'Allax'){
-    		chain.x = (Math.random() - 0.5) * 1000
-    		chain.z = (Math.random() - 0.5) * 1000
+     //simple cluster,basically just a few class threads that are glued together
+    const surroundings_map = new Map()
+    for (let clas of funny_objects){
+    	for (let class_node of clas.nodes){
+    		class_node = class_node[1]
+    		if (surroundings_map.get(class_node.nodeSurroundings(nodes_map))){
+    			surroundings_map.get(class_node.nodeSurroundings(nodes_map)).push(class_node.id)
+    		} else {
+    		surroundings_map.set(class_node.nodeSurroundings(nodes_map),[class_node.id])
+    		}
     	}
-   	}
-	return {nodes,links}
+    }
+    console.log(surroundings_map)
+    //iterating over the surroundings map, and grouping clusters if there is a parent child relation inside the map entry
+    let clusters = []
+    for (let pattern of surroundings_map){
+    	let classes_grouping = new Map()
+
+    	//empty connectivity pattern is a skip
+    	if (pattern[0] === '[]'){
+    		continue;
+    	}
+    	//sorting nodes based on their class
+    	for (let node of pattern[1]){
+    		node = nodes_map.get(node)
+    		if (classes_grouping.get(node.class)){
+    			classes_grouping.get(node.class).push(node)
+    		} else {classes_grouping.set(node.class,[node])}
+
+    	}
+    	//adding clusters which have more then one node
+    	for (let group of classes_grouping){
+    		if (group[1].length > 1){
+    			group.push(pattern[0])
+    			clusters.push(group)
+    		}
+    	}
+    }
+    console.log(clusters)
+
+
+
+    //some class movements
+    let a = 100
+    let b = 200
+    let s = 0
+    let increment = 80
+    for (let clas of funny_objects){
+    	clas.x = a + s%(increment*4)
+    	clas.z = b + Math.floor(s/(increment*4))*increment
+    	s += increment
+    }	
+
+
+
+
+	return [{nodes,links},clusters]
 }

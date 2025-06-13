@@ -7,6 +7,7 @@ import { GUI } from "dat.gui";
 import { TFile } from "obsidian";
 import * as d3 from "d3";
 import * as THREE from 'three';
+import { getRandomColor } from "functions_spellbook.tsx";
 
 
 
@@ -40,8 +41,10 @@ export class Graph3DView extends ItemView {
     this.graphContainer.style.height = "100%";
     this.containerEl.appendChild(this.graphContainer);
 
+    const graph_data = Graph_processing()
+
     this.graph = ForceGraph3D()(this.graphContainer)
-      .graphData(Graph_processing())
+      .graphData(graph_data[0])
       .backgroundColor("#202020")
       // Set node labels
       .nodeLabel("id")
@@ -81,17 +84,23 @@ export class Graph3DView extends ItemView {
     this.graph.d3Force('center', null);
 
 
-    const scene = this.graph.scene();
-    const geometry = new THREE.BoxGeometry(20, 20, 20); // cube, larger size
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x00ff00,
-      transparent: true,
-      opacity: 0.3
-    });
-    const cube = new THREE.Mesh(geometry, material);
+    //adding cubes
+    for (let cluster of graph_data[1]){
+      let scene = this.graph.scene();
+      let y_dimension = 60
+      const geometry = new THREE.BoxGeometry(45, y_dimension, 45);
+      let node = cluster[1][0]
+      let material = new THREE.MeshStandardMaterial({
+        color: getRandomColor(),
+        transparent: true,
+        opacity: 0.3,
+        depthWrite: false  
+      });
 
-    cube.position.set(100, 50, -30); // arbitrary position
-    scene.add(cube);
+      let cube = new THREE.Mesh(geometry, material);
+      cube.position.set(node.x, node.y + y_dimension/2, node.z);
+      scene.add(cube);
+    }
 
 
 
