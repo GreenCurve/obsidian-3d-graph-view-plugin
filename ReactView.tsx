@@ -103,7 +103,9 @@ export function Dgraph7c94cd() {
           if (nodes_map.has(node_name_in_the_link)) {
                   //adding improvised ;ink into map
                   nodes_map.get(heading_of_the_note).parents.add(node_name_in_the_link)
+                  nodes_map.get(heading_of_the_note).incoming.add(node_name_in_the_link)
                   nodes_map.get(node_name_in_the_link).children.add(heading_of_the_note)
+                  nodes_map.get(node_name_in_the_link).outcoming.add(heading_of_the_note)
                   //topological sort
                   edges_top_sort.push([node_name_in_the_link,heading_of_the_note])
           }
