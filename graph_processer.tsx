@@ -18,11 +18,12 @@ export function Graph_processing(){
 	nodes_order = topologicalSort(nodes_top_sort,edges_top_sort)
 
     //Slowly add nodes
-    let distance = 0
     const nodes = []
     const links = []
 
     const funny_objects = []
+
+    const link_map = new Map()
 
 
     while (true){
@@ -66,77 +67,74 @@ export function Graph_processing(){
 				funny_objects.push(a)
     		}
 		//any other normal node	
-        } else {
-          new_node.y = distance;
-          new_node.x = 0
-          new_node.z = 0
-          distance += 50
         }
-        nodes.push(new_node)        
+
+        //remaining links
+        for (let node of new_node.incoming_exclusive){
+        	links.push({"source": parent.id, "target": new_node.id, "color": false })
+        }
+
+
+        //calculating node position by creating an orbital between all the parents
+        //setting up orbitals dictinonary
+        let ancestors =  Array.from(new_node.incoming).sort()
+        ancestors = JSON.stringify(ancestors)
+        if (!link_map.get((ancestors))){
+        	link_map.set(ancestors,[new_node])
+        } else {
+        	link_map.get(ancestors).push(new_node)
+        }
+        
+        //how many nodes are currently occupaing this orbital
+        queue_number = link_map.get(ancestors).length
+
+
+        //determining coordinates
+        let new_x
+        let new_z
+        let highest_y = 0
+
+        for (let ancestor of new_node.incoming){
+        	new_x += ancestor.x
+        	new_z += ancestor.z
+        	if (ancestor.y>highest_y){
+        		highest_y = ancestor.y
+        	}
+        }
+
+		if (new_node.incoming === 1){
+			let angle = 360/(new_node.incoming.length)
+			let radians = angle * (Math.PI / 180)
+			let theta = radians * queue_number
+			new_node.x = parent.x + 50 * Math.cos(theta)
+			new_node.z = parent.z + 50 * Math.sin(theta)
+			new_node.y = highest_y + 50  
+		} else if (new_node.incoming !== 0){
+        	new_x = new_x/new_node.incoming.length 
+        	new_z= new_z/new_node.incoming.length
+
+        	if (queue_number>1){
+        		new_x += ((Math.random() - 0.5) * 10)
+        		new_z += ((Math.random() - 0.5) * 10)
+        	}
+        	new_node.x = new_x
+        	new_node.z = new_z
+        	new_node.y = highest_y + 50        
+        	
+        } else {
+        	new_node.x = (Math.random() - 0.5) * 10000
+        	new_node.z = (Math.random() - 0.5) * 10000
+        	new_node.y = 0
+        }
+        nodes.push(new_node)
+
       } else {
-        distance = 0
         console.log('Finished Graph Building from loop',nodes_map)
         break;
       }
     }
-    console.log('Funny stuff',funny_objects)
-
-
-     //simple cluster,basically just a few class threads that are glued together
-    const surroundings_map = new Map()
-    for (let clas of funny_objects){
-    	for (let class_node of clas.nodes){
-    		class_node = class_node[1]
-    		if (surroundings_map.get(class_node.nodeSurroundings(nodes_map))){
-    			surroundings_map.get(class_node.nodeSurroundings(nodes_map)).push(class_node.id)
-    		} else {
-    		surroundings_map.set(class_node.nodeSurroundings(nodes_map),[class_node.id])
-    		}
-    	}
-    }
-    console.log(surroundings_map)
-    //iterating over the surroundings map, and grouping clusters if there is a parent child relation inside the map entry
-    let clusters = []
-    for (let pattern of surroundings_map){
-    	let classes_grouping = new Map()
-
-    	//empty connectivity pattern is a skip
-    	if (pattern[0] === '[]'){
-    		continue;
-    	}
-    	//sorting nodes based on their class
-    	for (let node of pattern[1]){
-    		node = nodes_map.get(node)
-    		if (classes_grouping.get(node.class)){
-    			classes_grouping.get(node.class).push(node)
-    		} else {classes_grouping.set(node.class,[node])}
-
-    	}
-    	//adding clusters which have more then one node
-    	for (let group of classes_grouping){
-    		if (group[1].length > 1){
-    			group.push(pattern[0])
-    			clusters.push(group)
-    		}
-    	}
-    }
-    console.log(clusters)
 
 
 
-    //some class movements
-    let a = 100
-    let b = 200
-    let s = 0
-    let increment = 80
-    for (let clas of funny_objects){
-    	clas.x = a + s%(increment*4)
-    	clas.z = b + Math.floor(s/(increment*4))*increment
-    	s += increment
-    }	
-
-
-
-
-	return [{nodes,links},clusters]
+	return {nodes,links}
 }

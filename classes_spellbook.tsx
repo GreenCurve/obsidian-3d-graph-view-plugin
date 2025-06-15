@@ -36,25 +36,13 @@ export class Node extends ShapeActor{
       this.color = false
       this.incoming = new Set()
       this.outcoming = new Set()
-      this.linkPropertyToExpression("incomingg_exclusive",() => new Set([...this.incoming].filter(x => !this.parents.has(x))))
+      this.linkPropertyToExpression("incoming_exclusive",() => new Set([...this.incoming].filter(x => !this.parents.has(x))))
       this.children = new Set()
       this.parents = new Set()
       this.x = 0
       this.y = 0
       this.z = 0
     }
-    nodeSurroundings(nodes_map){
-    	let surrounding = []
-    	for (let parent of this.incomingg_exclusive){
-    		parent = nodes_map.get(parent)
-    		if (parent.class){
-    			surrounding.push(parent.class.id)
-    		}
-    	}
-    	surrounding =  JSON.stringify(surrounding.sort())
-   		return surrounding
-    }
-
   }
 
 
@@ -70,12 +58,7 @@ export class NodeChain extends ShapeActor{
   	// map of node objects included in the chain
     this.nodes = new Map(); 
     this.nodes.set(root.id,root)
-    this.x = (Math.random() - 0.5) * 1000
-    this.y = 0
-    this.z = (Math.random() - 0.5) * 1000
     this.color = getRandomColor()
-   	//distance between class nodes
-    this.level = 50
     //new property to refer to class
     root.class = this
 
@@ -89,30 +72,15 @@ export class NodeChain extends ShapeActor{
 	    	this.superclasses.set(parent_class.id,parent_class)
 	    	colors.push(parent_class.color)
 	    }
-
 	    //new color shoulb be blend of references to other classes
 	    this.linkPropertyToExpression("color",() => blendHexColors(colors))
-
-	    //new coordinates should also be reference of the parent
-	    this.linkPropertyToExpression("x",() => m_parent.x)
-	    this.linkPropertyToExpression("z",() => m_parent.z)
-	    this.linkPropertyToExpression("y",() => m_parent.y + m_parent.class.level)
 	}
-
-
 	//setting root to have the same stuff as its class
-    root.linkPropertyToExpression('x',() => this.x)
-    root.linkPropertyToExpression('y',() => this.y)
-    root.linkPropertyToExpression('z',() => this.z)
     root.linkPropertyToExpression('color',() => this.color)
-
   }
   addNode(node,parent) {
     this.nodes.set(node.id,node);
     //node now references coordinates of its parent
-    node.linkPropertyToExpression('y',() => parent.y + this.level)
-    node.linkPropertyToExpression('x',() => parent.x)
-    node.linkPropertyToExpression('z',() => parent.z)
     node.linkPropertyToExpression('color',() => parent.color)
     node.class = this
   }

@@ -44,7 +44,7 @@ export class Graph3DView extends ItemView {
     const graph_data = Graph_processing()
 
     this.graph = ForceGraph3D()(this.graphContainer)
-      .graphData(graph_data[0])
+      .graphData(graph_data)
       .backgroundColor("#202020")
       // Set node labels
       .nodeLabel("id")
@@ -84,23 +84,23 @@ export class Graph3DView extends ItemView {
     this.graph.d3Force('center', null);
 
 
-    //adding cubes
-    for (let cluster of graph_data[1]){
-      let scene = this.graph.scene();
-      let y_dimension = 60
-      const geometry = new THREE.BoxGeometry(45, y_dimension, 45);
-      let node = cluster[1][0]
-      let material = new THREE.MeshStandardMaterial({
-        color: getRandomColor(),
-        transparent: true,
-        opacity: 0.3,
-        depthWrite: false  
-      });
+    // //adding cubes
+    // for (let cluster of graph_data[1]){
+    //   let scene = this.graph.scene();
+    //   let y_dimension = 60
+    //   const geometry = new THREE.BoxGeometry(45, y_dimension, 45);
+    //   let node = cluster[1][0]
+    //   let material = new THREE.MeshStandardMaterial({
+    //     color: getRandomColor(),
+    //     transparent: true,
+    //     opacity: 0.3,
+    //     depthWrite: false  
+    //   });
 
-      let cube = new THREE.Mesh(geometry, material);
-      cube.position.set(node.x, node.y + y_dimension/2, node.z);
-      scene.add(cube);
-    }
+    //   let cube = new THREE.Mesh(geometry, material);
+    //   cube.position.set(node.x, node.y + y_dimension/2, node.z);
+    //   scene.add(cube);
+    // }
 
 
 
