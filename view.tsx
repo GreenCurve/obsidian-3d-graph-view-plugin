@@ -1,8 +1,7 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import ForceGraph3D from "3d-force-graph";
 import SpriteText from "three-spritetext";
-import { Dgraph7c94cd } from "ReactView";
-import { Graph_processing } from "graph_processer.tsx"
+import { CoordinateProcessing } from "Coordinates.tsx"
 import { GUI } from "dat.gui";
 import { TFile } from "obsidian";
 import * as d3 from "d3";
@@ -41,7 +40,7 @@ export class Graph3DView extends ItemView {
     this.graphContainer.style.height = "100%";
     this.containerEl.appendChild(this.graphContainer);
 
-    const graph_data = Graph_processing()
+    const graph_data = CoordinateProcessing()
 
     this.graph = ForceGraph3D()(this.graphContainer)
       .graphData(graph_data)

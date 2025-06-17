@@ -136,12 +136,67 @@ export function topologicalSort(nodes, edges) {
 
       // Check for cycles
       if (sorted.length !== nodes.length) {
-        const unprocessed = nodes.filter(n => !sorted.includes(n));
-        console.error("Cycle detected involving these nodes:", unprocessed);
+        console.error("Cycle detected in the graph.");
+
+        // Call DFS-based cycle detector
+        const cycles = findCycles(nodes, edges);
+        for (const cycle of cycles) {
+          console.error("Cycle path:", cycle.join(" -> "));
         }
+      }
 
       return sorted;
     }
+
+
+//Cycle detection function. GPT MADE
+function findCycles(nodes, edges) {
+  const graph = new Map();
+  for (const node of nodes) {
+    graph.set(node, []);
+  }
+  for (const [from, to] of edges) {
+    graph.get(from).push(to);
+  }
+
+  const visited = new Set();
+  const recStack = new Set();
+  const path = [];
+  const cycles = [];
+
+  function dfs(node) {
+    visited.add(node);
+    recStack.add(node);
+    path.push(node);
+
+    for (const neighbor of graph.get(node)) {
+      if (!visited.has(neighbor)) {
+        if (dfs(neighbor)) return true;
+      } else if (recStack.has(neighbor)) {
+        // Cycle detected; extract it
+        const cycleStartIndex = path.indexOf(neighbor);
+        const cycle = path.slice(cycleStartIndex);
+        cycle.push(neighbor); // to complete the loop
+        cycles.push(cycle);
+        // return true; // comment this line to find all cycles
+      }
+    }
+
+    recStack.delete(node);
+    path.pop();
+    return false;
+  }
+
+  for (const node of nodes) {
+    if (!visited.has(node)) {
+      if (dfs(node)) break; // stop at first cycle
+    }
+  }
+
+  return cycles;
+}
+
+
 
  
 //creating array with all basenames of the files in the inital array

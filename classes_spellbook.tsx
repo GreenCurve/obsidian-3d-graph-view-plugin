@@ -1,4 +1,4 @@
-import { getRandomColor } from "functions_spellbook.tsx";
+import { getRandomColor,blendHexColors } from "functions_spellbook.tsx";
 
 
 
@@ -33,7 +33,9 @@ export class Node extends ShapeActor{
    	  super()
       this.id = id
       this.path = path
-      this.color = false
+      this.colors = []
+      this.linkPropertyToExpression('color',() => blendHexColors(this.colors))
+      this.class = new Set()
       this.incoming = new Set()
       this.outcoming = new Set()
       this.linkPropertyToExpression("incoming_exclusive",() => new Set([...this.incoming].filter(x => !this.parents.has(x))))
@@ -49,39 +51,30 @@ export class Node extends ShapeActor{
 
 //representation of a class chain
 export class NodeChain extends ShapeActor{
-  constructor(root,m_parent = 0,merg_classes = []) {
+  constructor(root) {
   	super()
   	this.id = root.id
   	this.root = root
-  	this.superclasses = new Map()
-  	this.subclasses = new Map()
+
   	// map of node objects included in the chain
-    this.nodes = new Map(); 
-    this.nodes.set(root.id,root)
+    this.nodes = new Map();
+    this.links = [] 
     this.color = getRandomColor()
-    //new property to refer to class
-    root.class = this
-
-
-   	//if we create class as subclass
-    if (!(m_parent === 0)){
-    	//list of colors from all superclasses
-	    let colors = []
-	    for (let parent_class of merg_classes){
-	    	parent_class.subclasses.set(this.id,this)
-	    	this.superclasses.set(parent_class.id,parent_class)
-	    	colors.push(parent_class.color)
-	    }
-	    //new color shoulb be blend of references to other classes
-	    this.linkPropertyToExpression("color",() => blendHexColors(colors))
-	}
-	//setting root to have the same stuff as its class
-    root.linkPropertyToExpression('color',() => this.color)
+    this.addNode(root)
   }
-  addNode(node,parent) {
+
+  addNode(node) {
+  	if (this.nodes.has(node)){
+  		return
+  	}
     this.nodes.set(node.id,node);
-    //node now references coordinates of its parent
-    node.linkPropertyToExpression('color',() => parent.color)
-    node.class = this
+    for (let parent of node.parents){
+    	if (this.nodes.has(parent)){
+    		this.links.push({"source": parent.id, "target": node.id})
+    	}
+    }
+    //new node has more colors and more classes
+    node.colors.push(this.color)
+    node.class.add(this)
   }
 }
