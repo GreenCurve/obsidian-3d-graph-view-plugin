@@ -1,5 +1,5 @@
 import { blendHexColors } from "functions_spellbook.tsx";
-import { NodeChain } from "classes_spellbook.tsx"
+import { NodeChain,NodeCluster,NodeClusterChain } from "classes_spellbook.tsx"
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import ForceGraph3D from "3d-force-graph";
 import SpriteText from "three-spritetext";
@@ -21,19 +21,14 @@ export function Graph_processing(){
 
     const funny_objects = new Map()
     funny_objects.set('Classes',[])
-    funny_objects.set('Clusters',[])
+    funny_objects.set('ClusterChains',[])
 
     const link_map = new Map()
 
 
     while (true){
 		if (!(nodes_order.length === 0)){
-			// console.log(nodes_order)
 			let new_node = nodes_map.get(nodes_order.shift())
-
-			if (new_node.proxy.length > 0){
-				funny_objects.get("Clusters").push(new_node)
-			}
 
 			//root nodes
 			if ((new_node.parents.size === 0) && (new_node.children.size !== 0)) {
@@ -42,12 +37,25 @@ export function Graph_processing(){
 				funny_objects.get("Classes").push(a)      
 			//non-root class nodes with a singular parent
 			} else if ((new_node.parents.size > 0)) {
+				classes_to_be_merged = new Set()
 				for (let parent of new_node.parents){
 					parent = nodes_map.get(parent)
-					for (let one_class of parent.class){
-						one_class.addNode(new_node)
-					}
+					classes_to_be_merged.add(parent.class)					
 					links.push({"source": parent.id, "target": new_node.id, "color": parent.color })
+				}
+				//if only one parenting class among all parents
+				if (classes_to_be_merged.size === 1){
+					[...classes_to_be_merged][0].addNode(new_node)
+				//if many classes to be merged
+				} else {
+					let a = new NodeChain(new_node)
+					for (let clas of classes_to_be_merged){
+						a.colors.push(clas.color)
+						a.parents.add(clas)
+						clas.children.add(a)
+					}
+					a.addNode(new_node)
+					funny_objects.get("Classes").push(a) 
 				}
 			}
 
@@ -64,5 +72,33 @@ export function Graph_processing(){
       }
     }
 
+
+    //clusters
+    for (let node of nodes){
+		if (node.proxy.length > 0){
+			//check if one of parents is already in cluster
+			let parent_with_cluster = false
+			let parent_cluster = false
+			for (let parent of node.parents){
+				parent = nodes_map.get(parent)
+				if (parent.cluster){
+					parent_cluster = parent.cluster
+					parent_with_cluster = parent
+				}
+			}
+			//checking whether we create new or add to old
+			if (parent_cluster){
+				parent_cluster.addCluster(parent_with_cluster,node)
+			} else {
+				let a = new NodeClusterChain(node)
+				funny_objects.get("ClusterChains").push(a)
+			}
+
+		}
+
+    }
+
+
+    console.log(funny_objects)
 	return [nodes_map,link_map,funny_objects,nodes,links]
 }
