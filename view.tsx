@@ -43,7 +43,7 @@ export class Graph3DView extends ItemView {
     const graph_data = CoordinateProcessing()
 
     this.graph = ForceGraph3D()(this.graphContainer)
-      .graphData(graph_data)
+      .graphData(graph_data[0])
       .backgroundColor("#202020")
       // Set node labels
       .nodeLabel("id")
@@ -83,24 +83,31 @@ export class Graph3DView extends ItemView {
     this.graph.d3Force('center', null);
 
 
-    // //adding cubes
-    // for (let cluster of graph_data[1]){
-    //   let scene = this.graph.scene();
-    //   let y_dimension = 60
-    //   const geometry = new THREE.BoxGeometry(45, y_dimension, 45);
-    //   let node = cluster[1][0]
-    //   let material = new THREE.MeshStandardMaterial({
-    //     color: getRandomColor(),
-    //     transparent: true,
-    //     opacity: 0.3,
-    //     depthWrite: false  
-    //   });
+    // adding cylinders instead of cubes
+    for (let node of graph_data[1]) {
+      let scene = this.graph.scene();
+      let y_dimension = 60;   // height of cylinder
+      const radiusTop = 20;    // radius of top circle
+      const radiusBottom = 20; // radius of bottom circle
+      const height = y_dimension;
+      const radialSegments = 32; // smoothness of the cylinder
 
-    //   let cube = new THREE.Mesh(geometry, material);
-    //   cube.position.set(node.x, node.y + y_dimension/2, node.z);
-    //   scene.add(cube);
-    // }
+      const geometry = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radialSegments);
 
+      let material = new THREE.MeshStandardMaterial({
+        color: getRandomColor(),
+        transparent: true,
+        opacity: 0.3,
+        depthWrite: false  
+      });
+
+      let cylinder = new THREE.Mesh(geometry, material);
+
+      // Position: note y + half height so base sits on node.y
+      cylinder.position.set(node.x, node.y + height / 2, node.z);
+
+      scene.add(cylinder);
+    }
 
 
 

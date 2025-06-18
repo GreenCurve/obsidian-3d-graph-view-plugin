@@ -19,7 +19,9 @@ export function Graph_processing(){
     const links = []
 
 
-    const funny_objects = []
+    const funny_objects = new Map()
+    funny_objects.set('Classes',[])
+    funny_objects.set('Clusters',[])
 
     const link_map = new Map()
 
@@ -28,11 +30,16 @@ export function Graph_processing(){
 		if (!(nodes_order.length === 0)){
 			// console.log(nodes_order)
 			let new_node = nodes_map.get(nodes_order.shift())
+
+			if (new_node.proxy.length > 0){
+				funny_objects.get("Clusters").push(new_node)
+			}
+
 			//root nodes
 			if ((new_node.parents.size === 0) && (new_node.children.size !== 0)) {
 				let a = new NodeChain(new_node)
 				a.addNode(new_node)
-				funny_objects.push(a)      
+				funny_objects.get("Classes").push(a)      
 			//non-root class nodes with a singular parent
 			} else if ((new_node.parents.size > 0)) {
 				for (let parent of new_node.parents){
@@ -52,7 +59,7 @@ export function Graph_processing(){
         nodes.push(new_node)
         
       } else {
-        console.log('Finished Graph Building from loop',nodes_map,link_map)
+        console.log('Finished Graph Building from loop')
         break;
       }
     }

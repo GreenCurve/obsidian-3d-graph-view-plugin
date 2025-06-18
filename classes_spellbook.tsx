@@ -44,7 +44,31 @@ export class Node extends ShapeActor{
       this.x = 0
       this.y = 0
       this.z = 0
+      this.proxy = []
+      this.representative = false
+
+      //iterator for proxy
+      this._iterator = this.generateProxyPositions()
+
     }
+
+	*generateProxyPositions() {
+	  for (let i = 0; i < this.proxy.length; i++) {
+	    let angle = (360 / this.proxy.length) * i;
+	    let radians = angle * (Math.PI / 180);
+	    let x = this.x + 20 * Math.cos(radians);
+	    let z = this.z + 20 * Math.sin(radians);
+	    let y = this.y + 20
+	    yield [x,y,z];
+	  }
+	}
+
+	get nextProxy()	{
+	    const result = this._iterator.next();
+	    return result.done ? null : result.value; // or wrap around, or reset, your choice
+  	}
+
+
   }
 
 
@@ -76,5 +100,8 @@ export class NodeChain extends ShapeActor{
     //new node has more colors and more classes
     node.colors.push(this.color)
     node.class.add(this)
+
+
+    
   }
 }

@@ -40,7 +40,7 @@ export function Dgraph7c94cd() {
       if (!!frontmatter.Class){
         // just in case i have left onld text-only Class property (new ones are lists which for some reason have type 'object')
         if (typeof frontmatter.Class === 'string') {
-            variable = [variable];
+            frontmatter.Class = [frontmatter.Class];
         }
         for (let element of frontmatter.Class) {
           node_name_in_the_link = element.slice(2, -2)
@@ -58,6 +58,26 @@ export function Dgraph7c94cd() {
           }
         }
       }
+      if (!!frontmatter.Proxy){
+        if (typeof frontmatter.Proxy === 'string') {
+            frontmatter.Proxy = [frontmatter.Proxy];
+        }
+        for (let element of frontmatter.Proxy) {
+          node_name_in_the_link = element.slice(2, -2)
+          //links are displayed with "|", alias after it, so getting the real name
+          node_name_in_the_link = node_name_in_the_link.split('|')[0] 
+          //slicing of square brackets of the [[foo]], as it is stored that way in the Class
+          if (nodes_map.has(node_name_in_the_link)) {
+                  //adding improvised ;ink into map
+                  nodes_map.get(heading_of_the_note).incoming.add(node_name_in_the_link)
+                  nodes_map.get(heading_of_the_note).representative = node_name_in_the_link
+                  nodes_map.get(node_name_in_the_link).outcoming.add(heading_of_the_note)
+                  nodes_map.get(node_name_in_the_link).proxy.push(heading_of_the_note)
+                  //topological sort
+                  edges_top_sort.push([node_name_in_the_link,heading_of_the_note])
+          }
+        }
+      } 
     }
     //second possible link check, those are links in the main body (text)
     if (("links" in caches)) {

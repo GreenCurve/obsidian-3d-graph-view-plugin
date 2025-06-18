@@ -3,8 +3,6 @@ import { Graph_processing } from "Secondary_processing.tsx"
 export function CoordinateProcessing(){
 	[nodes_map,link_map,funny_objects,nodes,links] = Graph_processing()
 
-	console.log(nodes)
-
 	for (let new_node of nodes){
 		//calculating node position by creating an orbital between all the parents
 	    //setting up orbitals dictinonary
@@ -24,6 +22,7 @@ export function CoordinateProcessing(){
 	    let new_x = 0
 	    let new_z = 0
 	    let highest_y = 0
+
 	    for (let ancestor of new_node.incoming){
 	    	ancestor = nodes_map.get(ancestor)
 	    	new_x += ancestor.x
@@ -33,7 +32,12 @@ export function CoordinateProcessing(){
 	    	}
 	    }
 
-		if (new_node.incoming.size === 1){
+
+	    //proxy
+	    if (new_node.representative){
+	    	[new_node.x,new_node.y,new_node.z] = nodes_map.get(new_node.representative).nextProxy;
+	    	console.log(new_node)
+	    } else if (new_node.incoming.size === 1){
 			ancestor = nodes_map.get(new_node.incoming.values().next().value)
 
 			if (ancestor.outcoming.size === 1){
@@ -67,7 +71,6 @@ export function CoordinateProcessing(){
 	    }
 
 	}
-
 	
-	return {nodes,links}
+	return [{nodes,links},funny_objects.get('Clusters')]
 }
