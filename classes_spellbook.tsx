@@ -6,13 +6,13 @@ import { getRandomColor,blendHexColors } from "functions_spellbook.tsx";
 
 //defaul object class
 export class ShapeActor{
-	constructor(id,root,members){
-	this.id = id
-	this.root = root
-	this.members = members
+	constructor(){
+
+	this.members = new Map()
 	this.links = []
 	this.children = new Set()
     this.parents = new Set() 
+
 	this.x = 0
 	this.y = 0
 	this.z = 0		
@@ -35,34 +35,88 @@ export class ShapeActor{
       this[propName] = value;
     }
 
+
+    //list of id's + node object
+    addMember(parent_members,new_member){
+	  	if (this.members.has(new_member.id)){
+	  		console.log('member already exists', this, new_member)
+	  		return
+	  	}
+    	if (parent_members.length>0){
+    		this.members.set(new_member.id,new_member)
+			for (let parent of parent_members){
+				if (this.members.has(parent)){
+					parent = this.members.get(parent)
+					this.links.push({"source": parent.id, "target": new_member.id})
+					//be wary, in the class chains this makes classes to attempt tro assign parents-children anew
+					parent.children.add(new_member.id)
+					new_member.parents.add(parent.id)
+				}
+			}
+		} else {
+			//change to container for roots later?
+			this.root = new_member
+			this.id = this.root.id
+			this.members.set(this.root.id,this.root)			
+		}
+    }
+
+
     set set_X(value){
-    	this.x = value
+    	let className = this.constructor.name;
+    	//the way it works for nodes
+    	if (className === "Node"){
+    		this.x = value
+    	} else {
+    		for (let member of this.members.values()){
+    			member.set_X = value
+    		}
+    	}
     }
     set set_Y(value){
-    	this.y = value
+    	let className = this.constructor.name;
+    	//the way it works for nodes
+    	if (className === "Node"){
+    		this.y = value
+    	} else {
+    		for (let member of this.members.values()){
+    			member.set_Y = value
+    		}
+    	}
     }
     set set_Z(value){
-    	this.z = value
+    	let className = this.constructor.name;
+    	//the way it works for nodes
+    	if (className === "Node"){
+    		this.z = value
+    	} else {
+    		for (let member of this.members.values()){
+    			member.set_Z = value
+    		}
+    	}
     }
 }
 
 
 export class Node extends ShapeActor{
     constructor(id,path){
-   	  super(id,0,0)
+   	  super()
+   	  //the only one who sets them directly instead of using addMember
+   	  this.id = id
    	  this.root = this
-   	  this.members = [this]
+   	  this.members.set(this.id,this)
 
       this.path = path
       this.color = false
-      this.class = new Set()
+      this.class = false
       this.incoming = new Set()
       this.outcoming = new Set()
       this.linkPropertyToExpression("incoming_exclusive",() => new Set([...this.incoming].filter(x => !this.parents.has(x))))
 
 
-      this.proxy = []
+      this.proxy = new Map()
       this.representative = false
+      this.cluster = false
 
       //iterator for proxy
       this._iterator = this.generateProxyPositions()
@@ -70,7 +124,7 @@ export class Node extends ShapeActor{
     }
 
 	*generateProxyPositions() {
-	  for (let i = 0; i < this.proxy.length; i++) {
+	  for (let i = 0; i < this.proxy.size; i++) {
 	    let angle = (360 / this.proxy.length) * i;
 	    let radians = angle * (Math.PI / 180);
 	    let x = this.x + 20 * Math.cos(radians);
@@ -84,40 +138,24 @@ export class Node extends ShapeActor{
 	    const result = this._iterator.next();
 	    return result.done ? null : result.value; // or wrap around, or reset, your choice
   	}
-
-
-  }
+}
 
 
 //representation of a class chain
 export class NodeChain extends ShapeActor{
   constructor(root) {
-  	super(root.id,root,new Map())
-
-
-
-
-
-    this.colors = [getRandomColor()]
+  	super()
+  	this.colors = [getRandomColor()]
     this.linkPropertyToExpression('color',() => blendHexColors(this.colors))
 
+  	this.addMember([],root)
 
   }
 
-  addNode(node) {
-  	if (this.members.has(node)){
-  		console.log('node already exists in the class')
-  		return
-  	}
-    this.members.set(node.id,node);
-    for (let parent of node.parents){
-    	if (this.members.has(parent)){
-    		this.links.push({"source": parent.id, "target": node.id})
-    	}
-    }
-
-    node.color = this.color
-    node.class = this
+  addMember(parent_members,new_member) {
+    super.addMember(parent_members,new_member)
+    new_member.color = this.color
+    new_member.class = this
     
   }
 }
@@ -125,30 +163,32 @@ export class NodeChain extends ShapeActor{
 
 export class NodeCluster extends ShapeActor{
 	constructor(root){
-		super(root.id,root,[root].concat(root.proxy))
+		super()
+		this.addMember([],root)
+		for (let node of root.proxy.values()){
+			this.addMember([root.id],node)
+		}
+
+	}
+	addMember(parent_members,new_member){
+		super.addMember(parent_members,new_member)
 	}
 
-}
+
+
+}	
+
 
 export class NodeClusterChain extends ShapeActor{
 	constructor(root){
-		super(root.id,new NodeCluster(root),new Map())
-
-		this.addCluster(0,root)
-
+		super(root)
+		this.addMember([],root)
 	}
 
-	addCluster(parent_node,child_node){
-		if (parent_node === 0){
-			this.root_cluster = new NodeCluster(child_node)
-			this.members.set(this.root_cluster.id,this.root_cluster)
-		} else {
-			let new_cluster = new NodeCluster(child_node)
-			this.members.set(new_cluster.id,new_cluster)
-		}
-		child_node.cluster = this
+	addMember(parent_members,new_member){
+		new_member.cluster = this
+		new_member = new NodeCluster(new_member)
+		super.addMember(parent_members,new_member)
+		
 	}
-
-
-
 }

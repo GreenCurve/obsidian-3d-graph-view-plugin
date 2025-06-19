@@ -10,6 +10,13 @@ export function CoordinateProcessing(){
 		a+=50
 	}
 
+	for (let cluster of funny_objects.get("ClusterChains")){
+		a = (Math.random() - 0.5) * 1000
+		cluster.set_X = a
+		cluster.set_Y = a
+		cluster.set_Z = a
+	}
+
 	
 
 	// for (let new_node of nodes){

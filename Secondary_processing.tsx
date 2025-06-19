@@ -29,13 +29,11 @@ export function Graph_processing(){
     while (true){
 		if (!(nodes_order.length === 0)){
 			let new_node = nodes_map.get(nodes_order.shift())
-
 			//root nodes
 			if ((new_node.parents.size === 0) && (new_node.children.size !== 0)) {
 				let a = new NodeChain(new_node)
-				a.addNode(new_node)
 				funny_objects.get("Classes").push(a)      
-			//non-root class nodes with a singular parent
+			//non-root class nodes
 			} else if ((new_node.parents.size > 0)) {
 				classes_to_be_merged = new Set()
 				for (let parent of new_node.parents){
@@ -45,7 +43,7 @@ export function Graph_processing(){
 				}
 				//if only one parenting class among all parents
 				if (classes_to_be_merged.size === 1){
-					[...classes_to_be_merged][0].addNode(new_node)
+					[...classes_to_be_merged][0].addMember([...new_node.parents],new_node)
 				//if many classes to be merged
 				} else {
 					let a = new NodeChain(new_node)
@@ -54,7 +52,7 @@ export function Graph_processing(){
 						a.parents.add(clas)
 						clas.children.add(a)
 					}
-					a.addNode(new_node)
+					a.addMember([],new_node)
 					funny_objects.get("Classes").push(a) 
 				}
 			}
@@ -75,7 +73,7 @@ export function Graph_processing(){
 
     //clusters
     for (let node of nodes){
-		if (node.proxy.length > 0){
+		if (node.proxy.size > 0){
 			//check if one of parents is already in cluster
 			let parent_with_cluster = false
 			let parent_cluster = false
@@ -88,7 +86,7 @@ export function Graph_processing(){
 			}
 			//checking whether we create new or add to old
 			if (parent_cluster){
-				parent_cluster.addCluster(parent_with_cluster,node)
+				parent_cluster.addMember([parent_with_cluster.id],node)
 			} else {
 				let a = new NodeClusterChain(node)
 				funny_objects.get("ClusterChains").push(a)

@@ -72,7 +72,7 @@ export function Dgraph7c94cd() {
                   nodes_map.get(heading_of_the_note).incoming.add(node_name_in_the_link)
                   nodes_map.get(heading_of_the_note).representative = node_name_in_the_link
                   nodes_map.get(node_name_in_the_link).outcoming.add(heading_of_the_note)
-                  nodes_map.get(node_name_in_the_link).proxy.push(heading_of_the_note)
+                  nodes_map.get(node_name_in_the_link).proxy.set(heading_of_the_note,nodes_map.get(heading_of_the_note))
                   //topological sort
                   edges_top_sort.push([node_name_in_the_link,heading_of_the_note])
           }
