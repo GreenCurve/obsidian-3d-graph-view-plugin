@@ -13,6 +13,10 @@ export class ShapeActor{
 	this.children = new Set()
     this.parents = new Set() 
 
+
+    this.incoming = new Set()
+    this.outcoming = new Set()
+
 	this.x = 0
 	this.y = 0
 	this.z = 0		
@@ -109,8 +113,6 @@ export class Node extends ShapeActor{
       this.path = path
       this.color = false
       this.class = false
-      this.incoming = new Set()
-      this.outcoming = new Set()
       this.linkPropertyToExpression("incoming_exclusive",() => new Set([...this.incoming].filter(x => !this.parents.has(x))))
 
 
@@ -172,6 +174,7 @@ export class NodeCluster extends ShapeActor{
 	}
 	addMember(parent_members,new_member){
 		super.addMember(parent_members,new_member)
+		new_member.cluster = this
 	}
 
 
@@ -186,8 +189,8 @@ export class NodeClusterChain extends ShapeActor{
 	}
 
 	addMember(parent_members,new_member){
-		new_member.cluster = this
 		new_member = new NodeCluster(new_member)
+		new_member.clusterChain = this
 		super.addMember(parent_members,new_member)
 		
 	}

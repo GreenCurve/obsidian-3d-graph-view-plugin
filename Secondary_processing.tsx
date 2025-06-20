@@ -73,27 +73,67 @@ export function Graph_processing(){
 
     //clusters
     for (let node of nodes){
-		if (node.proxy.size > 0){
+    	//every class node is a cluster...
+    	if (node.class){
+    		//...except for the proxies (for now atleast)
+    		if (node.representative){
+    			continue
+    		}
+
 			//check if one of parents is already in cluster
-			let parent_with_cluster = false
-			let parent_cluster = false
-			for (let parent of node.parents){
-				parent = nodes_map.get(parent)
-				if (parent.cluster){
-					parent_cluster = parent.cluster
-					parent_with_cluster = parent
+			let ancestors_with_cluster = []
+			let cluster_parents = new Map()
+			for (let ancestor of node.parents){
+				ancestor = nodes_map.get(ancestor)
+				if (ancestor.cluster){
+					ancestors_with_cluster.push(ancestor)
+					if (cluster_parents.has(ancestor.cluster)){
+						cluster_parents.get(ancestor.cluster.id).add(ancestor)
+					} else {
+						cluster_parents.set(ancestor.cluster.id,[ancestor])
+					}
+
 				}
 			}
-			//checking whether we create new or add to old
-			if (parent_cluster){
-				parent_cluster.addMember([parent_with_cluster.id],node)
-			} else {
+
+
+			//no parents means no clusters for sure (as after this algo every class node is in some cluster)
+			if (node.parents.size === 0){
 				let a = new NodeClusterChain(node)
 				funny_objects.get("ClusterChains").push(a)
+				//new chain and new cluster
+			//error, read last one
+			} else if (ancestors_with_cluster.length === 0 ){
+				console.error('Some class node is clusterless!',node.parents)
+			} else {
+				if ([...cluster_parents.keys()].length === 1){
+					ancestors_with_cluster[0].cluster.clusterChain.addMember(ancestors_with_cluster,node)
+				} else {
+					let a = new NodeClusterChain(node)
+					funny_objects.get("ClusterChains").push(a)
+					for (let parents_from_one_cluster of cluster_parents.values()){
+						a.parents.add(parents_from_one_cluster[0].cluster.clusterChain)
+						parents_from_one_cluster[0].cluster.clusterChain.children.add(a)
+						a.root.parents.add(parents_from_one_cluster[0].cluster)
+						parents_from_one_cluster[0].cluster.children.add(a.root)
+					}
+				}
 			}
 
-		}
 
+			for (let pc_anc of node.incoming_exclusive){
+				pc_anc = nodes_map.get(pc_anc)
+				if (!(pc_anc.representative) && pc_anc.cluster){
+					node.cluster.incoming.add(pc_anc.cluster)
+					node.cluster.clusterChain.incoming.add(pc_anc.cluster.clusterChain)
+
+					pc_anc.cluster.outcoming.add(node.cluster)
+					pc_anc.cluster.clusterChain.outcoming.add(node.cluster.clusterChain)
+
+				}
+			}
+
+    	}
     }
 
 
