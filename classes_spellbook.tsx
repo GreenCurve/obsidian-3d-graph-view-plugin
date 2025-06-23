@@ -1,4 +1,5 @@
 import { getRandomColor,blendHexColors } from "functions_spellbook.tsx";
+import generateId from "functions_spellbook.tsx";
 
 
 
@@ -6,21 +7,71 @@ import { getRandomColor,blendHexColors } from "functions_spellbook.tsx";
 
 //defaul object class
 export class ShapeActor{
-	constructor(){
+	constructor(layer){
 
+	//what type of actor it is
+	//1 - node
+	//2 - class
+	//3 - cluster
+	//4 - cluster chain
+	//5 - special
+	this.layer = layer
+	//way to identify this actor
+	this.id = generateId()
+	this.path = false
+
+	//things it perticipates in
+	this.q2 = new Map()
+	this.q3 = new Map()
+	this.q4 = new Map()
+
+	//members, most important members, and their connections
 	this.members = new Map()
-	this.links = []
-	this.children = new Set()
-    this.parents = new Set() 
+	this.root = false
+	this.member_bridges = []
+
+	//inner
+	this.inner_members = false
+	this.inner_bridges = []
 
 
-    this.incoming = new Set()
-    this.outcoming = new Set()
+	//bridges
+	this.bridges = []
+	//..aaand their categories
+	this.incoming_bridges = []
+	this.outcoming_bridges = []
+	this.normal_bridges = []
+	this.incoming_normal_bridges = []
+	this.outcoming_normal_bridges = []
+	this.class_bridges = []
+	this.incoming_class_bridges = []
+	this.outcoming_class_bridges = []
+	this.proxy_bridges = []
+	this.incoming_proxy_bridges = []
+	this.outcoming_proxy_bridges = []
+	this.to_classes_bridges = []
+	this.incoming_to_classes_bridges = []
+	this.outcoming_to_classes_bridges = []
 
+
+
+
+    //coordinates
 	this.x = 0
 	this.y = 0
-	this.z = 0		
+	this.z = 0
+
+	//coloring
+	this.colors = []
+	this.linkPropertyToExpression('color',() => blendHexColors(this.colors))
+
+	//defines how it handles its members
+	this.behaviour = false
+
+	//filtering temp
+	this.f_classed = false
 	}
+
 
 	//Turn static property into expression
     //chat gpt warned me about serialisation with JSON.stringify(node)
@@ -40,158 +91,113 @@ export class ShapeActor{
     }
 
 
-    //list of id's + node object
-    addMember(parent_members,new_member){
+    //needs list of id's + object
+    addMember(parent_bridges,new_member){
 	  	if (this.members.has(new_member.id)){
 	  		console.log('member already exists', this, new_member)
 	  		return
 	  	}
-    	if (parent_members.length>0){
-    		this.members.set(new_member.id,new_member)
-			for (let parent of parent_members){
-				if (this.members.has(parent)){
-					parent = this.members.get(parent)
-					this.links.push({"source": parent.id, "target": new_member.id})
-					//be wary, in the class chains this makes classes to attempt tro assign parents-children anew
-					parent.children.add(new_member.id)
-					new_member.parents.add(parent.id)
+	  	//classes transfer their colors to members
+	  	if (this.layer === 2){
+	  		new_member.colors.push(this.color)
+	  	}
+	  	let a = this.member_bridges.length
+
+    	if (parent_bridges.length>0){
+			for (let bridge of parent_bridges){
+				if (this.members.has(bridge.source.id)){
+					this.member_bridges.push(bridge)
 				}
 			}
+		}
+		//if new bridges were added
+		if (a < this.member_bridges.length){
+		    this.members.set(new_member.id,new_member)	
 		} else {
 			//change to container for roots later?
 			this.root = new_member
-			this.id = this.root.id
 			this.members.set(this.root.id,this.root)			
 		}
+		new_member['q' + this.layer.toString()].set(this.id,this)
     }
 
-
+    //consume members and bridges between them, re-rout outside bridges to itself
+    innerfy(){
+    	this.inner_members = new Map(this.members)
+    	this.members = new Map()
+    	this.inner_bridges = this.root.outcoming_proxy_bridges
+    	for (let member of this.inner_members.values()){
+    		for (let bridge of member.incoming_bridges){
+    			if (bridge.type !== 'proxy'){
+    				bridge.true_target = bridge.target
+    				bridge.target = this
+    			}
+    		}
+    		for (let bridge of member.outcoming_bridges){
+    			if (bridge.type !== 'proxy'){
+    				bridge.true_source = bridge.source
+    				bridge.source = this
+    			}
+    		}
+    	}
+    }
+    
     set set_X(value){
-    	let className = this.constructor.name;
     	//the way it works for nodes
-    	if (className === "Node"){
+    	if (this.layer === 1){
     		this.x = value
     	} else {
     		for (let member of this.members.values()){
     			member.set_X = value
     		}
+    		for (let member of this.inner_members.values()){
+    			member.set_X = value
+    		}
     	}
     }
     set set_Y(value){
-    	let className = this.constructor.name;
     	//the way it works for nodes
-    	if (className === "Node"){
+    	if (this.layer === 1){
     		this.y = value
     	} else {
     		for (let member of this.members.values()){
     			member.set_Y = value
     		}
+    		for (let member of this.inner_members.values()){
+    			member.set_Y = value
+    		}
     	}
     }
     set set_Z(value){
-    	let className = this.constructor.name;
     	//the way it works for nodes
-    	if (className === "Node"){
+    	if (this.layer === 1){
     		this.z = value
     	} else {
     		for (let member of this.members.values()){
+    			member.set_Z = value
+    		}
+    		for (let member of this.inner_members.values()){
     			member.set_Z = value
     		}
     	}
     }
 }
 
-
-export class Node extends ShapeActor{
-    constructor(id,path){
-   	  super()
-   	  //the only one who sets them directly instead of using addMember
-   	  this.id = id
-   	  this.root = this
-   	  this.members.set(this.id,this)
-
-      this.path = path
-      this.color = false
-      this.class = false
-      this.linkPropertyToExpression("incoming_exclusive",() => new Set([...this.incoming].filter(x => !this.parents.has(x))))
-
-
-      this.proxy = new Map()
-      this.representative = false
-      this.cluster = false
-
-      //iterator for proxy
-      this._iterator = this.generateProxyPositions()
-
-    }
-
-	*generateProxyPositions() {
-	  for (let i = 0; i < this.proxy.size; i++) {
-	    let angle = (360 / this.proxy.length) * i;
-	    let radians = angle * (Math.PI / 180);
-	    let x = this.x + 20 * Math.cos(radians);
-	    let z = this.z + 20 * Math.sin(radians);
-	    let y = this.y + 20
-	    yield [x,y,z];
-	  }
-	}
-
-	get nextProxy()	{
-	    const result = this._iterator.next();
-	    return result.done ? null : result.value; // or wrap around, or reset, your choice
-  	}
-}
-
-
-//representation of a class chain
-export class NodeChain extends ShapeActor{
-  constructor(root) {
-  	super()
-  	this.colors = [getRandomColor()]
-    this.linkPropertyToExpression('color',() => blendHexColors(this.colors))
-
-  	this.addMember([],root)
-
-  }
-
-  addMember(parent_members,new_member) {
-    super.addMember(parent_members,new_member)
-    new_member.color = this.color
-    new_member.class = this
-    
-  }
-}
-
-
-export class NodeCluster extends ShapeActor{
-	constructor(root){
-		super()
-		this.addMember([],root)
-		for (let node of root.proxy.values()){
-			this.addMember([root.id],node)
+export class Bridge{
+	constructor(source,target){
+		this.source = source
+		this.target = target
+		//type of connection
+		//false
+		//class
+		//proxy
+		this.type = false
+		//in case of re-routing
+		this.true_source = false
+		this.true_target = false
+		if (source === target){
+			console.log('Equal to itself',this)
 		}
 
-	}
-	addMember(parent_members,new_member){
-		super.addMember(parent_members,new_member)
-		new_member.cluster = this
-	}
-
-
-
-}	
-
-
-export class NodeClusterChain extends ShapeActor{
-	constructor(root){
-		super(root)
-		this.addMember([],root)
-	}
-
-	addMember(parent_members,new_member){
-		new_member = new NodeCluster(new_member)
-		new_member.clusterChain = this
-		super.addMember(parent_members,new_member)
-		
 	}
 }

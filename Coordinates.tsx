@@ -1,21 +1,44 @@
 import { Graph_processing } from "Secondary_processing.tsx"
 
 export function CoordinateProcessing(){
-	[nodes_map,link_map,funny_objects,nodes,links] = Graph_processing()
+	let [one_map,nodes,links,zero_map] = Graph_processing()
 
 
 	let a = 0
 	for (let node of nodes){
+
 		[node.x,node.y,node.z] = [0,a,0]
 		a+=50
+		if (node['q2'].size > 0){
+			node.set_X = (Math.random() - 0.5) * 1000
+			node.set_Z = (Math.random() - 0.5) * 1000
+		}
+	}
+	let b = 0
+	for (let node of zero_map.get('3').values()){
+		node.set_Y = b
+		node.set_X = (Math.random() - 0.5) * 1000
+		node.set_Z = (Math.random() - 0.5) * 1000
+		b+=50
 	}
 
-	for (let cluster of funny_objects.get("ClusterChains")){
-		a = (Math.random() - 0.5) * 1000
-		cluster.set_X = a
-		cluster.set_Y = a
-		cluster.set_Z = a
-	}
+	// let counter = 0
+	// for (let cluster of zero_map.get('3').values()){
+	// 	let angle = 360/(zero_map.get('3').size)
+	// 	let radians = angle * (Math.PI / 180)
+	// 	let theta = radians * counter
+	// 	cluster.set_X = 200 * Math.cos(theta)
+	// 	cluster.set_Y = 0
+	// 	cluster.set_Z = 200 * Math.sin(theta)
+	// 	counter++
+	// }
+
+	// for (let cluster of funny_objects.get("ClusterChains")){
+	// 	a = (Math.random() - 0.5) * 1000
+	// 	cluster.set_X = a
+	// 	cluster.set_Y = a
+	// 	cluster.set_Z = a
+	// }
 
 	
 
@@ -87,5 +110,5 @@ export function CoordinateProcessing(){
 
 	// }
 	
-	return [{nodes,links},funny_objects.get('ClusterChains')]
+	return [{nodes,links},9999999999999999]
 }

@@ -1,3 +1,32 @@
+import { ShapeActor } from "classes_spellbook.tsx"
+
+
+
+//id gen
+const createIdGenerator = () => {
+  let counter = 0;
+  return function generateId() {
+    return `id_${Date.now()}_${counter++}`;
+  };
+};
+
+const generateId = createIdGenerator();
+export default generateId;
+
+//direct access array to check for the file existance
+export function maping(arr) {
+  const map = new Map()
+  for (let i = 0; i < arr.length; i++) {
+  let heading = arr[i].basename
+  let path = arr[i].path
+  let shape = new ShapeActor(1)
+  shape.id = heading
+  shape.path = path
+  map.set(shape.id,shape)
+  }
+  return map
+} 
+
 //following function returns random hex color (#RRGGBB) that is not 'bad' (no pale, dark, etc colors)
 export const getRandomColor = (function () {
   // Generate random initial hue on first use
