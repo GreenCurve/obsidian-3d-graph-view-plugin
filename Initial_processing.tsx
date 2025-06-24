@@ -98,7 +98,7 @@ export function Dgraph7c94cd() {
               let bridge = new Bridge(a,b)
               a.bridges.push(bridge)
               b.bridges.push(bridge)
-              if (b.f_classed){
+              if (a.f_classed){
                 a.outcoming_bridges.push(bridge)
                 b.incoming_bridges.push(bridge)
                 a.to_classes_bridges.push(bridge)

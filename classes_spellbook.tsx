@@ -131,12 +131,16 @@ export class ShapeActor{
     			if (bridge.type !== 'proxy'){
     				bridge.true_target = bridge.target
     				bridge.target = this
+    				//indexing
+    				this.bridges.push(bridge)
     			}
     		}
     		for (let bridge of member.outcoming_bridges){
     			if (bridge.type !== 'proxy'){
     				bridge.true_source = bridge.source
     				bridge.source = this
+    				//indexing
+    				this.bridges.push(bridge)
     			}
     		}
     	}

@@ -30,7 +30,7 @@ export function FilterFiles() {
     //getting the cache dictionary of the file:
     const t_c = this.app.metadataCache.getCache(raw_data[i].path)
     const tags = t_c.frontmatter.tags
-    const search_conditions = ["temp"]
+    const search_conditions = ["NaturalLanguages","Англ"]
     let containsTags = false
     if (tags !== null){
       for (let condition of search_conditions){
